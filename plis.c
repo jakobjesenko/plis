@@ -86,11 +86,106 @@ void printTokenisedProgram(FILE* fpointer, token tokenised[]){
     }
 }
 
+int jumpPC(token tokenised[], int programCounter){
+    int bracketsOpen = 1;
+    if (programCounter == 0){
+        return programCounter;
+    }
+    do {
+        programCounter++;
+        if (tokenised[programCounter].opnum == op_argstart){
+            bracketsOpen++;
+        } else if (tokenised[programCounter].opnum == op_argend){
+            bracketsOpen--;
+        }
+    } while (bracketsOpen);
+    return programCounter;
+}
+
+// dons ne vem, kako bi to popravu
+void insertASTNode(token tokenised[], int programCounter, astNode* branch){
+    for (int i = 0; i < MAX_ARGUMENT_COUNT; i++){
+        programCounter += i;
+        token t = tokenised[programCounter];
+        if (!t.row){
+            return;
+        }
+        // astNode* node = (astNode*)malloc(sizeof(astNode));
+        astNode* node = (astNode*)calloc(1, sizeof(astNode));
+        switch (t.opnum){
+            case op_argstart:
+                free(node);
+                break;
+            case op_argend:
+                free(node);
+                break;
+            case op_nop:
+                /* assert(tokenised[programCounter + 1].opnum == op_argstart &&
+                    tokenised[programCounter + 2].opnum == op_argend &&
+                    "wrong use of operation: `nop`"); */
+                node->opnum = op_nop;
+                branch->child[i] = node;
+                break;
+            case op_exit:
+                /* assert(tokenised[programCounter + 1].opnum == op_argstart &&
+                    tokenised[programCounter + 2].opnum == not_op &&
+                    tokenised[programCounter + 3].opnum == op_argend &&
+                    "wrong use of operation: `exit`"); */
+                node->opnum = op_exit;
+                branch->child[i] = node;
+                insertASTNode(tokenised, programCounter + 2, branch->child[i]);
+                break;
+            case not_op:
+                node->opnum = not_op;
+                node->info = t.info;
+                branch->child[i] = node;
+                programCounter++;
+                break;
+            default:
+                assert(0 && "unknown operation");
+                break;
+        }
+        programCounter = jumpPC(tokenised, programCounter);
+    }
+}
+
+void printAST(FILE* fpointer, astNode node, int depth){
+    for (int i = 0; i < depth; i++){
+        fprintf(fpointer, "  ");
+    }
+    if (node.opnum == op_nop || node.opnum == not_op){
+        if (!node.info){
+            return;
+        }
+        fprintf(fpointer, "%s  %s\n", keywords[node.opnum], node.info);
+        return;
+    }
+
+    fprintf(fpointer, "%s\n", keywords[node.opnum]);
+
+    for (int i = 0; i < MAX_ARGUMENT_COUNT; i++){
+        if (!node.child[i]){
+            break;
+        }
+        printAST(fpointer, *node.child[i], depth + 1);
+    }
+}
+
 int main(int argc, char const *argv[]) {
     static token tokenised[TOKEN_ARRAY_LENGHT] = {0};
 
     lex("examples/test0.plis", tokenised);
     printTokenisedProgram(stdout, tokenised);
+
+    astNode* ast = (astNode*)calloc(1, sizeof(astNode));
+    ast->opnum = op_entry;
+    insertASTNode(tokenised, 0, ast);
+    
+    printf("\n\n\n");
+
+    printAST(stdout, *ast, 0);
+
+    printf("\n\n\n");
 
     return 0;
 }
