@@ -87,105 +87,138 @@ void printTokenisedProgram(FILE* fpointer, token tokenised[]){
 }
 
 int jumpPC(token tokenised[], int programCounter){
-    int bracketsOpen = 1;
-    if (programCounter == 0){
+    int bracketsOpen = 0;
+    if (tokenised[programCounter].opnum != op_argstart){
         return programCounter;
     }
     do {
-        programCounter++;
         if (tokenised[programCounter].opnum == op_argstart){
             bracketsOpen++;
         } else if (tokenised[programCounter].opnum == op_argend){
             bracketsOpen--;
         }
+        programCounter++;
     } while (bracketsOpen);
     return programCounter;
 }
 
-// dons ne vem, kako bi to popravu
-void insertASTNode(token tokenised[], int programCounter, astNode* branch){
-    for (int i = 0; i < MAX_ARGUMENT_COUNT; i++){
-        programCounter += i;
-        token t = tokenised[programCounter];
-        if (!t.row){
-            return;
-        }
-        // astNode* node = (astNode*)malloc(sizeof(astNode));
+bool insertASTNode(token tokenised[], int programCounter, astNode* branch, int depth){
+
+    token t = tokenised[programCounter];
+    if (t.opnum == op_argend){
+        return true;
+    }
+
+    branch->opnum = t.opnum;
+    if (t.opnum == not_op){
+        branch->info = t.info;
+        return false;
+    }
+
+    programCounter += 2;
+
+    for (int i = 0; i <= MAX_ARGUMENT_COUNT; i++){
         astNode* node = (astNode*)calloc(1, sizeof(astNode));
-        switch (t.opnum){
-            case op_argstart:
-                free(node);
-                break;
-            case op_argend:
-                free(node);
-                break;
-            case op_nop:
-                /* assert(tokenised[programCounter + 1].opnum == op_argstart &&
-                    tokenised[programCounter + 2].opnum == op_argend &&
-                    "wrong use of operation: `nop`"); */
-                node->opnum = op_nop;
-                branch->child[i] = node;
-                break;
-            case op_exit:
-                /* assert(tokenised[programCounter + 1].opnum == op_argstart &&
-                    tokenised[programCounter + 2].opnum == not_op &&
-                    tokenised[programCounter + 3].opnum == op_argend &&
-                    "wrong use of operation: `exit`"); */
-                node->opnum = op_exit;
-                branch->child[i] = node;
-                insertASTNode(tokenised, programCounter + 2, branch->child[i]);
-                break;
-            case not_op:
-                node->opnum = not_op;
-                node->info = t.info;
-                branch->child[i] = node;
-                programCounter++;
-                break;
-            default:
-                assert(0 && "unknown operation");
-                break;
+        branch->child[i] = node;
+        programCounter = jumpPC(tokenised, programCounter + i);
+        if (insertASTNode(tokenised, programCounter, branch->child[i], depth + 1)){
+            return false;
         }
-        programCounter = jumpPC(tokenised, programCounter);
     }
 }
 
-void printAST(FILE* fpointer, astNode node, int depth){
+void printAST(FILE* fpointer, astNode* node, int depth){
     for (int i = 0; i < depth; i++){
         fprintf(fpointer, "  ");
     }
-    if (node.opnum == op_nop || node.opnum == not_op){
-        if (!node.info){
+    if (node->opnum == op_nop || node->opnum == not_op){
+        if (!node->info){
             return;
         }
-        fprintf(fpointer, "%s  %s\n", keywords[node.opnum], node.info);
+        fprintf(fpointer, "%s  %s\n", keywords[node->opnum], node->info);
         return;
     }
 
-    fprintf(fpointer, "%s\n", keywords[node.opnum]);
+    fprintf(fpointer, "%s\n", keywords[node->opnum]);
 
     for (int i = 0; i < MAX_ARGUMENT_COUNT; i++){
-        if (!node.child[i]){
+        if (!node->child[i]){
             break;
         }
-        printAST(fpointer, *node.child[i], depth + 1);
+        printAST(fpointer, node->child[i], depth + 1);
     }
 }
 
 int main(int argc, char const *argv[]) {
     static token tokenised[TOKEN_ARRAY_LENGHT] = {0};
 
-    lex("examples/test0.plis", tokenised);
-    printTokenisedProgram(stdout, tokenised);
+    flagList flags = {0};
+    char* tokenOutFilename;
+    char* treeOutFilename;
+    char* assemblyOutFilename;
+    char* codeInFilename = NULL;
+
+    if (argc < 2){
+        printf("not enough arguments. use -h flag for help\n");
+        return 1;
+    }
+    for (int i = 1; i < argc; i++){
+        if (argv[i][0] == '-'){
+            switch (argv[i][1]){
+                case 'a':
+                    flags.tree = true;
+                    if (i < argc - 1 && argv[i + 1][0] != '-'){
+                        treeOutFilename = (char*)argv[++i];
+                    }
+                    break;
+                case 't':
+                    flags.tokens = true;
+                    if (i < argc - 1 && argv[i + 1][0] != '-'){
+                        tokenOutFilename = (char*)argv[++i];
+                    }
+                    break;
+                case 's':
+                    flags.assembly = true;
+                    if (i < argc - 1 && argv[i + 1][0] != '-'){
+                        assemblyOutFilename = (char*)argv[++i];
+                    }
+                    break;
+                case 'h':
+                    flags.help = true;
+                    break;
+                default:
+                    printf("not recognised flag. use -h flag for help\n");
+                    return 1;
+                    break;
+            }
+        } else {
+            codeInFilename = (char*)argv[i];
+        }
+    }
+
+    if (flags.help){
+        printf("help needs implemented\n");
+        return 0;
+    }
+
+    if (!codeInFilename){
+        printf("input file missing. use -h flag for help\n");
+        return 1;
+    }
+    lex(codeInFilename, tokenised);
+    if (flags.tokens){
+        FILE* tokenOutFile = fopen(tokenOutFilename, "w");
+        printTokenisedProgram(tokenOutFile, tokenised);
+        fclose(tokenOutFile);
+    }
 
     astNode* ast = (astNode*)calloc(1, sizeof(astNode));
-    ast->opnum = op_entry;
-    insertASTNode(tokenised, 0, ast);
-    
-    printf("\n\n\n");
-
-    printAST(stdout, *ast, 0);
-
-    printf("\n\n\n");
+    insertASTNode(tokenised, 0, ast, 0);
+    if (flags.tree){
+        FILE* treeOutFile = fopen(treeOutFilename, "w");
+        printAST(treeOutFile, ast, 0);
+        fclose(treeOutFile);
+    }
 
     return 0;
 }

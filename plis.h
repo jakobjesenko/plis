@@ -18,7 +18,6 @@ typedef enum {
     op_argstart,
     op_argend,
     not_op,
-    op_entry,
     count_op
 } ops;
 
@@ -28,14 +27,7 @@ char* keywords[] = {
     "(",
     ")",
     "notop__",
-    "entry__"
 };
-
-/* typedef union {
-    char string[16];
-    int integer;
-    char character;
-} parameter; */
 
 typedef struct astNode {
     ops opnum;
@@ -49,5 +41,12 @@ typedef struct {
     ops opnum;
     char* info;
 } token;
+
+typedef struct {
+    bool help;
+    bool tokens;
+    bool tree;
+    bool assembly;
+} flagList;
 
 #endif
