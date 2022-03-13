@@ -88,9 +88,11 @@ void printTokenisedProgram(FILE* fpointer, token tokenised[]){
 
 int jumpPC(token tokenised[], int programCounter){
     int bracketsOpen = 0;
-    if (tokenised[programCounter].opnum != op_argstart){
+    programCounter++;
+    if (tokenised[programCounter].opnum == not_op){
         return programCounter;
     }
+    programCounter++;
     do {
         if (tokenised[programCounter].opnum == op_argstart){
             bracketsOpen++;
@@ -98,32 +100,38 @@ int jumpPC(token tokenised[], int programCounter){
             bracketsOpen--;
         }
         programCounter++;
-    } while (bracketsOpen);
+    } while (bracketsOpen > 0);
     return programCounter;
 }
 
-bool insertASTNode(token tokenised[], int programCounter, astNode* branch, int depth){
+void insertASTNode(token tokenised[], int programCounter, astNode* branch){
 
     token t = tokenised[programCounter];
     if (t.opnum == op_argend){
-        return true;
+        return;
     }
+
+    assert(t.opnum != not_op && "unbelonging constant");
 
     branch->opnum = t.opnum;
-    if (t.opnum == not_op){
-        branch->info = t.info;
-        return false;
-    }
-
-    programCounter += 2;
-
-    for (int i = 0; i <= MAX_ARGUMENT_COUNT; i++){
-        astNode* node = (astNode*)calloc(1, sizeof(astNode));
-        branch->child[i] = node;
-        programCounter = jumpPC(tokenised, programCounter + i);
-        if (insertASTNode(tokenised, programCounter, branch->child[i], depth + 1)){
-            return false;
+    programCounter++;
+    
+    for (int i = 0; i < MAX_ARGUMENT_COUNT; i++){
+        programCounter++;
+        token param = tokenised[programCounter];
+        if (param.opnum == op_argend){
+            break;
         }
+        astNode* node = (astNode*)calloc(1, sizeof(astNode));
+        if (param.opnum == not_op){
+            node->opnum = not_op;
+            node->info = param.info;
+            branch->child[i] = node;
+            continue;
+        }
+        branch->child[i] = node;
+        insertASTNode(tokenised, programCounter, branch->child[i]);
+        programCounter = jumpPC(tokenised, programCounter);
     }
 }
 
@@ -213,7 +221,7 @@ int main(int argc, char const *argv[]) {
     }
 
     astNode* ast = (astNode*)calloc(1, sizeof(astNode));
-    insertASTNode(tokenised, 0, ast, 0);
+    insertASTNode(tokenised, 0, ast);
     if (flags.tree){
         FILE* treeOutFile = fopen(treeOutFilename, "w");
         printAST(treeOutFile, ast, 0);

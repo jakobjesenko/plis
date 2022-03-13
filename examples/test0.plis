@@ -1,1 +1,1 @@
-exit(exit(1, 2, 3), exit(4, 5))
+exit(exit(1), 2, exit(3, exit(4, exit(6), 7)), 8, 9)
