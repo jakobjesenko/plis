@@ -10,10 +10,19 @@ void lex(char* codeFileName, token tokenised[]){
     int programCounter = 0;
     char bracketStack[BRACKET_STACK_DEPTH];
     int bracketSP = 0;
+    bool insideChar = false;
 
     while ((c = fgetc(f)) != EOF){
+        if (c == '\''){
+            insideChar = insideChar ? false : true;
+        } else {
+            if (insideChar){
+                goto skipstuff;
+            }
+        }
         switch (c){
             case ' ':
+            case '\'':
                 break;
             case '\t':
                 col +=3;
@@ -60,6 +69,7 @@ void lex(char* codeFileName, token tokenised[]){
                 }
                 tokenised[programCounter++] = (token){row, col, op_argend, NULL};
                 break;
+            skipstuff:
             default:
                 word[wordIndex++] = c;
                 word[wordIndex] = 0;
@@ -86,7 +96,7 @@ void printTokenisedProgram(FILE* fpointer, token tokenised[]){
     }
 }
 
-// move to next argument from function call
+// move to next argument of function call
 int jumpPC(token tokenised[], int programCounter){
     int bracketsOpen = 0;
     programCounter++; // always op_argstart
@@ -178,40 +188,60 @@ void printAsmHead(FILE* fpointer){
     fprintf(fpointer, "\nstart:\n");
 }
 
+bool isNumber(char* x){
+    while (*x){
+
+        if (!isdigit(*x)){
+            return false;
+        }
+        x++;
+    }
+    return true;
+}
+
+char parseChar(char* str){
+    switch (str[1]){
+        case 'a':
+            return '\a';
+        case 'b':
+            return '\b';
+        case 'e':
+            return '\e';
+        case 'f':
+            return '\f';
+        case 'n':
+            return '\n';
+        case 'r':
+            return '\r';
+        case 't':
+            return '\t';
+        case 'v':
+            return '\v';
+        case '\\':
+            return '\\';
+        case '\'':
+            return '\'';
+        case '\"':
+            return '\"';
+        default:
+            return '\?';
+    }
+}
+
 void printAsmProgram(FILE* fpointer, astNode* node){
     // TODO rework this bottom condition
     if (node->opnum == op_nop || node->opnum == not_op){
         if (!node->info){
             return;
         }
-        // fprintf(fpointer, "\tpushq %s\t\t\t\t; %s\n", node->info, keywords[node->opnum]);
+        if (isNumber(node->info)){
+            fprintf(fpointer, "\tpushq %s\t\t\t\t; params push\n", node->info);
+        } else if (node->info[0] == '\\' && strlen(node->info) == 2) {
+            fprintf(fpointer, "\tpushq %d\t\t\t\t; params push\n", (int)parseChar(node->info));
+        } else {
+            fprintf(fpointer, "\tpushq %d\t\t\t\t; params push\n", (int)*(node->info));
+        }
         return;
-    }
-
-    switch (node->opnum){
-        case op_nop:
-            break;
-        case op_exit:
-            fprintf(fpointer, "\tmov rax, 60\t\t\t\t; exit\n");
-            fprintf(fpointer, "\tmov rdi, %s\t\t\t\t; |\n", node->child[0]->info);
-            fprintf(fpointer, "\tsyscall\t\t\t\t; |\n");
-            break;
-        case op_putc:
-            fprintf(fpointer, "\tpushq %s\t\t\t\t; putc\n", node->child[0]->info);
-            fprintf(fpointer, "\tmov rax, 1\t\t\t\t; |\n");
-            fprintf(fpointer, "\tmov rdi, 1\t\t\t\t; |\n");
-            fprintf(fpointer, "\tmov rsi, rsp\t\t\t\t; |\n");
-            fprintf(fpointer, "\tmov rdx, 1\t\t\t\t; |\n");
-            fprintf(fpointer, "\tsyscall\t\t\t\t; |\n");
-            fprintf(fpointer, "\tadd rsp, 8\t\t\t\t; |\n");
-            break;
-        case op_chain:
-            break;
-        case op_testingop:
-            break;
-        default:
-            assert(0 && "not recognised operation");
-            break;
     }
 
     for (int i = 0; i < MAX_ARGUMENT_COUNT; i++){
@@ -219,6 +249,30 @@ void printAsmProgram(FILE* fpointer, astNode* node){
             break;
         }
         printAsmProgram(fpointer, node->child[i]);
+        switch (node->opnum){
+            case op_nop:
+                break;
+            case op_exit:
+                fprintf(fpointer, "\tmov rax, 60\t\t\t\t; exit\n");
+                fprintf(fpointer, "\tpopq rdi\t\t\t\t; |\n");
+                fprintf(fpointer, "\tsyscall\t\t\t\t; |\n");
+                break;
+            case op_putc:
+                fprintf(fpointer, "\tmov rax, 1\t\t\t\t; |\n");
+                fprintf(fpointer, "\tmov rdi, 1\t\t\t\t; |\n");
+                fprintf(fpointer, "\tmov rsi, rsp\t\t\t\t; |\n");
+                fprintf(fpointer, "\tmov rdx, 1\t\t\t\t; |\n");
+                fprintf(fpointer, "\tsyscall\t\t\t\t; |\n");
+                fprintf(fpointer, "\tadd rsp, 8\t\t\t\t; |\n");
+                break;
+            case op_chain:
+                break;
+            case op_testingop:
+                break;
+            default:
+                assert(0 && "not recognised operation");
+                break;
+        }
     }
 }
 

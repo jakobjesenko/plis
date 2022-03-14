@@ -1,7 +1,7 @@
 chain(
-    putc(33),
+    putc('A'),
     chain(
-        putc(10),
-        exit(33)
+        putc('!'),
+        putc(10)
     )
 )

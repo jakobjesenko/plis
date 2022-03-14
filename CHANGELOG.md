@@ -1,5 +1,23 @@
 # Changelog
 
+## Alpha 2.0 (2022-3-14)
+
+Plis switched to more appropriate calling convention using stack to transfer arguments. Character literals were added. First hello [world program](examples/hello0.plis) is now easily achivable.
+
+### Modified Operations:
+| operation              | usage               | description   |
+| :--------------------: | :------------------ | :------------ |
+| `putc(n)`              | putc(int\|char:n[^a2.0-1]) -> none | print character to stdout by its ascii code |
+
+### Problems:
+`nop()` does even less than expected (does not get added to AST)
+
+### Possible improvements:
+- [ ] make nop waste a cpu cycle
+- [x] add character literals for use with putc
+
+[^a2.0-1]: int\|cher:arg means either type is accepted
+
 ## Alpha 1.1 (2022-3-14)
 
 Exit statement is no longer necessary at the ent of each execution flow. On successfull execution `exit(0)` is called automatically.

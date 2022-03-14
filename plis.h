@@ -6,6 +6,7 @@
 #include <string.h>
 #include <assert.h>
 #include <stdbool.h>
+#include <ctype.h>
 
 #define BRACKET_STACK_DEPTH 128
 #define TOKEN_ARRAY_LENGHT 256

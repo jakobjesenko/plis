@@ -1,0 +1,40 @@
+chain(
+    putc('H'),
+    chain(
+        putc('e'),
+        chain(
+            putc('l'),
+            chain(
+                putc('l'),
+                chain(
+                    putc('o'),
+                    chain(
+                        putc(','),
+                        chain(
+                            putc(' '),
+                            chain(
+                                putc('W'),
+                                chain(
+                                    putc('o'),
+                                    chain(
+                                        putc('r'),
+                                        chain(
+                                            putc('l'),
+                                            chain(
+                                                putc('d'),
+                                                chain(
+                                                    putc('!'),
+                                                    putc('\n')
+                                                )
+                                            )
+                                        )
+                                    )
+                                )
+                            )
+                        )
+                    )
+                )
+            )
+        )
+    )
+)
