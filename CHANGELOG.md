@@ -1,5 +1,16 @@
 # Changelog
 
+## Alpha 3.0
+
+math comming to plis!!!
+
+~18446744073709551550 = 65
+
+### New Operations:
+| operation              | usage                | description   |
+| :--------------------: | :------------------- | :------------ |
+| `bitnot(x)`            | bitnot(int:x) -> int | bitwise not operator |
+
 ## Alpha 2.0 (2022-3-14)
 
 Plis switched to more appropriate calling convention using stack to transfer arguments. Character literals were added. First [hello world program](examples/hello0.plis) is now easily achivable.

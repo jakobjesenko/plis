@@ -136,6 +136,15 @@ void insertASTNode(token tokenised[], int programCounter, astNode* branch){
             case op_chain:
                 assert(i < 3 && "chain only takes 2 arguments");
                 break;
+            case op_bitand:
+                assert(i < 3 && "bitand only takes 2 arguments");
+                break;
+            case op_bitor:
+                assert(i < 3 && "bitor only takes 2 arguments");
+                break;
+            case op_bitnot:
+                assert(i < 2 && "bitnot only takes 1 argument");
+                break;
             case op_testingop:
                 break;
             default:
@@ -266,6 +275,15 @@ void printAsmProgram(FILE* fpointer, astNode* node){
                 fprintf(fpointer, "\tadd rsp, 8\t\t\t\t; |\n");
                 break;
             case op_chain:
+                break;
+            case op_bitand:
+                break;
+            case op_bitor:
+                break;
+            case op_bitnot:
+                fprintf(fpointer, "\tpopq rax\t\t\t\t; bitnot\n");
+                fprintf(fpointer, "\tnot rax\t\t\t\t; |\n");
+                fprintf(fpointer, "\tpushq rax\t\t\t\t; |\n");
                 break;
             case op_testingop:
                 break;

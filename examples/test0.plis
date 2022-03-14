@@ -1,7 +1,4 @@
 chain(
-    putc('A'),
-    chain(
-        putc('!'),
-        putc(10)
-    )
+    putc(bitnot(18446744073709551550)),
+    putc('\n')
 )
