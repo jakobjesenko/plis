@@ -1,1 +1,15 @@
-exit(exit(1), 2, exit(3, exit(4, exit(6), 7)), 8, 9)
+testingop(
+    testingop(1),
+    2,
+    testingop(
+        3,
+        testingop(
+            exit(4),
+            testingop(6),
+            7
+        )
+    ),
+    nop(),
+    8,
+    9
+)

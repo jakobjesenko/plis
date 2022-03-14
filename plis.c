@@ -86,13 +86,10 @@ void printTokenisedProgram(FILE* fpointer, token tokenised[]){
     }
 }
 
+// move to next argument from function call
 int jumpPC(token tokenised[], int programCounter){
     int bracketsOpen = 0;
-    programCounter++;
-    if (tokenised[programCounter].opnum == not_op){
-        return programCounter;
-    }
-    programCounter++;
+    programCounter++; // always op_argstart
     do {
         if (tokenised[programCounter].opnum == op_argstart){
             bracketsOpen++;
@@ -101,7 +98,7 @@ int jumpPC(token tokenised[], int programCounter){
         }
         programCounter++;
     } while (bracketsOpen > 0);
-    return programCounter;
+    return programCounter - 1; // move PC back to last op_argend
 }
 
 void insertASTNode(token tokenised[], int programCounter, astNode* branch){
@@ -114,13 +111,13 @@ void insertASTNode(token tokenised[], int programCounter, astNode* branch){
     assert(t.opnum != not_op && "unbelonging constant");
 
     branch->opnum = t.opnum;
-    programCounter++;
+    programCounter++; // always op_argstart
     
-    for (int i = 0; i < MAX_ARGUMENT_COUNT; i++){
-        programCounter++;
+    for (int i = 0; i <= MAX_ARGUMENT_COUNT; i++){
+        programCounter++; // first argument
         token param = tokenised[programCounter];
         if (param.opnum == op_argend){
-            break;
+            return;
         }
         astNode* node = (astNode*)calloc(1, sizeof(astNode));
         if (param.opnum == not_op){
@@ -131,7 +128,7 @@ void insertASTNode(token tokenised[], int programCounter, astNode* branch){
         }
         branch->child[i] = node;
         insertASTNode(tokenised, programCounter, branch->child[i]);
-        programCounter = jumpPC(tokenised, programCounter);
+        programCounter = jumpPC(tokenised, programCounter); // PC points to a function
     }
 }
 
@@ -157,7 +154,47 @@ void printAST(FILE* fpointer, astNode* node, int depth){
     }
 }
 
+void printAsmHead(FILE* fpointer){
+    fprintf(fpointer, "format ELF64 executable 3\n");
+    fprintf(fpointer, "segment readable executable\n");
+    fprintf(fpointer, "entry start\n");
+    fprintf(fpointer, "\nstart:\n");
+}
+
+void printAsmProgram(FILE* fpointer, astNode* node){
+    // TODO rework this bottom condition
+    if (node->opnum == op_nop || node->opnum == not_op){
+        if (!node->info){
+            return;
+        }
+        fprintf(fpointer, "\tpushq %s\t\t\t\t; %s\n", node->info, keywords[node->opnum]);
+        return;
+    }
+
+    switch (node->opnum){
+        case op_exit:
+            fprintf(fpointer, "\tmov rax, 60\t\t\t\t; exit\n");
+            fprintf(fpointer, "\tmov rdi, %s\t\t\t\t; |\n", node->child[0]->info);
+            fprintf(fpointer, "\tsyscall\t\t\t\t; |\n");
+            break;
+        case op_testingop:
+            break;
+        default:
+            assert(0 && "not recognised operation");
+            break;
+    }
+
+    for (int i = 0; i < MAX_ARGUMENT_COUNT; i++){
+        if (!node->child[i]){
+            break;
+        }
+        printAsmProgram(fpointer, node->child[i]);
+    }
+}
+
 int main(int argc, char const *argv[]) {
+    assert(sizeof(keywords) / sizeof(char*) == count_op && "keywords counts do not match");
+
     static token tokenised[TOKEN_ARRAY_LENGHT] = {0};
 
     flagList flags = {0};
@@ -177,18 +214,24 @@ int main(int argc, char const *argv[]) {
                     flags.tree = true;
                     if (i < argc - 1 && argv[i + 1][0] != '-'){
                         treeOutFilename = (char*)argv[++i];
+                    } else {
+                        assert(0 && "filename missing");
                     }
                     break;
                 case 't':
                     flags.tokens = true;
                     if (i < argc - 1 && argv[i + 1][0] != '-'){
                         tokenOutFilename = (char*)argv[++i];
+                    } else {
+                        assert(0 && "filename missing");
                     }
                     break;
                 case 's':
                     flags.assembly = true;
                     if (i < argc - 1 && argv[i + 1][0] != '-'){
                         assemblyOutFilename = (char*)argv[++i];
+                    } else {
+                        assert(0 && "filename missing");
                     }
                     break;
                 case 'h':
@@ -213,6 +256,7 @@ int main(int argc, char const *argv[]) {
         printf("input file missing. use -h flag for help\n");
         return 1;
     }
+
     lex(codeInFilename, tokenised);
     if (flags.tokens){
         FILE* tokenOutFile = fopen(tokenOutFilename, "w");
@@ -226,6 +270,30 @@ int main(int argc, char const *argv[]) {
         FILE* treeOutFile = fopen(treeOutFilename, "w");
         printAST(treeOutFile, ast, 0);
         fclose(treeOutFile);
+    }
+
+    if (!flags.assembly){
+        char* tempFilename = "temp.asm";
+        assemblyOutFilename = tempFilename;
+    }
+    FILE* assemblyOutFile = fopen(assemblyOutFilename, "w");
+    printAsmHead(assemblyOutFile);
+    printAsmProgram(assemblyOutFile, ast);
+    fclose(assemblyOutFile);
+
+    char command[256];
+    strcpy(command, "fasm ");
+    strcat(command, assemblyOutFilename);
+    strcat(command, " ");
+    strcat(command, "out.elf");
+    system(command);
+
+    system("chmod +x out.elf");
+
+    if (!flags.assembly){
+        strcpy(command, "rm ");
+        strcat(command, assemblyOutFilename);
+        system(command);
     }
 
     return 0;
