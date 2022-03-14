@@ -8,10 +8,10 @@ Exit statement is no longer necessary at the ent of each execution flow. On succ
 | operation              | usage               | description   |
 | :--------------------: | :------------------ | :------------ |
 | `putc(n)`              | putc(int:n) -> none | print character to stdout by its ascii code |
-| `chain(expr1, epr2)`   | chain(none:expr1, none:expr2) | chain creates two successive folws in program execution, the same way two consecutive lines of code are interpreted by most other languages [example](examples/chain0.plis)
+| `chain(expr1, epr2)`   | chain(none:expr1, none:expr2) | chain creates two successive folws in program execution[^a1.1-1] [example](examples/chain0.plis)
 
 ### Problems:
-`nop()` does even less than expected (does not get added to AST)
+`nop()` does even less than expected (does not get added to AST),  
 `testingop()` should probably hava a return value of *any*
 
 ### Possible improvements:
@@ -20,6 +20,7 @@ Exit statement is no longer necessary at the ent of each execution flow. On succ
 - [x] automatically exit with code 0 on successfull execution
 - [x] check for correct number of arguments in function calls
 
+[^a1.1-1]: the same way two consecutive lines of code are interpreted by most other languages
 
 ## Alpha 1.0 (2022-3-14)
 
