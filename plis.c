@@ -114,6 +114,23 @@ void insertASTNode(token tokenised[], int programCounter, astNode* branch){
     programCounter++; // always op_argstart
     
     for (int i = 0; i <= MAX_ARGUMENT_COUNT; i++){
+        switch (t.opnum){
+            case op_nop:
+                break;
+            case op_exit:
+                assert(i < 2 && "exit only takes 1 argument");
+                break;
+            case op_putc:
+                assert(i < 2 && "putc only takes 1 argument");
+                break;
+            case op_chain:
+                assert(i < 3 && "chain only takes 2 arguments");
+                break;
+            case op_testingop:
+                break;
+            default:
+                assert(0 && "not recognised operation");
+        }
         programCounter++; // first argument
         token param = tokenised[programCounter];
         if (param.opnum == op_argend){
@@ -167,15 +184,28 @@ void printAsmProgram(FILE* fpointer, astNode* node){
         if (!node->info){
             return;
         }
-        fprintf(fpointer, "\tpushq %s\t\t\t\t; %s\n", node->info, keywords[node->opnum]);
+        // fprintf(fpointer, "\tpushq %s\t\t\t\t; %s\n", node->info, keywords[node->opnum]);
         return;
     }
 
     switch (node->opnum){
+        case op_nop:
+            break;
         case op_exit:
             fprintf(fpointer, "\tmov rax, 60\t\t\t\t; exit\n");
             fprintf(fpointer, "\tmov rdi, %s\t\t\t\t; |\n", node->child[0]->info);
             fprintf(fpointer, "\tsyscall\t\t\t\t; |\n");
+            break;
+        case op_putc:
+            fprintf(fpointer, "\tpushq %s\t\t\t\t; putc\n", node->child[0]->info);
+            fprintf(fpointer, "\tmov rax, 1\t\t\t\t; |\n");
+            fprintf(fpointer, "\tmov rdi, 1\t\t\t\t; |\n");
+            fprintf(fpointer, "\tmov rsi, rsp\t\t\t\t; |\n");
+            fprintf(fpointer, "\tmov rdx, 1\t\t\t\t; |\n");
+            fprintf(fpointer, "\tsyscall\t\t\t\t; |\n");
+            fprintf(fpointer, "\tadd rsp, 8\t\t\t\t; |\n");
+            break;
+        case op_chain:
             break;
         case op_testingop:
             break;
@@ -190,6 +220,12 @@ void printAsmProgram(FILE* fpointer, astNode* node){
         }
         printAsmProgram(fpointer, node->child[i]);
     }
+}
+
+void printAsmExit(FILE* fpointer){
+    fprintf(fpointer, "\tmov rax, 60\n");
+    fprintf(fpointer, "\tmov rdi, 0\n");
+    fprintf(fpointer, "\tsyscall\n");
 }
 
 int main(int argc, char const *argv[]) {
@@ -279,6 +315,7 @@ int main(int argc, char const *argv[]) {
     FILE* assemblyOutFile = fopen(assemblyOutFilename, "w");
     printAsmHead(assemblyOutFile);
     printAsmProgram(assemblyOutFile, ast);
+    printAsmExit(assemblyOutFile);
     fclose(assemblyOutFile);
 
     char command[256];

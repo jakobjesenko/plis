@@ -15,6 +15,8 @@
 typedef enum {
     op_nop,
     op_exit,
+    op_putc,
+    op_chain,
     op_testingop,
     op_argstart,
     op_argend,
@@ -25,6 +27,8 @@ typedef enum {
 char* keywords[] = {
     "nop",
     "exit",
+    "putc",
+    "chain",
     "testingop",
     "(",
     ")",

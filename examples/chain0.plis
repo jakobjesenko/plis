@@ -1,7 +1,7 @@
 chain(
-    putc(33),
+    putc(56),
     chain(
         putc(10),
-        exit(33)
+        exit(0)
     )
 )
