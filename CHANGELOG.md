@@ -7,9 +7,11 @@ math comming to plis!!!
 ~18446744073709551550 = 65
 
 ### New Operations:
-| operation              | usage                | description   |
-| :--------------------: | :------------------- | :------------ |
-| `bitnot(x)`            | bitnot(int:x) -> int | bitwise not operator |
+| operation              | usage                       | description   |
+| :--------------------: | :-------------------------- | :------------ |
+| `bitnot(x)`            | bitnot(int:x) -> int        | bitwise not operator |
+| `bitand(a, b)`         | bitand(int:a, int:b) -> int | bitwise and operator |
+| `bitor(a, b)`          | bitor(int:a, int:b) -> int  | bitwise or operator |
 
 ## Alpha 2.0 (2022-3-14)
 

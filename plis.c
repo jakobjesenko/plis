@@ -267,7 +267,7 @@ void printAsmProgram(FILE* fpointer, astNode* node){
                 fprintf(fpointer, "\tsyscall\t\t\t\t; |\n");
                 break;
             case op_putc:
-                fprintf(fpointer, "\tmov rax, 1\t\t\t\t; |\n");
+                fprintf(fpointer, "\tmov rax, 1\t\t\t\t; putc\n");
                 fprintf(fpointer, "\tmov rdi, 1\t\t\t\t; |\n");
                 fprintf(fpointer, "\tmov rsi, rsp\t\t\t\t; |\n");
                 fprintf(fpointer, "\tmov rdx, 1\t\t\t\t; |\n");
@@ -277,8 +277,16 @@ void printAsmProgram(FILE* fpointer, astNode* node){
             case op_chain:
                 break;
             case op_bitand:
+                fprintf(fpointer, "\tpopq rax\t\t\t\t; bitand\n");
+                fprintf(fpointer, "\tpopq rdi\t\t\t\t; |\n");
+                fprintf(fpointer, "\tand rdi\t\t\t\t; |\n");
+                fprintf(fpointer, "\tpushq rdi\t\t\t\t; |\n");
                 break;
             case op_bitor:
+                fprintf(fpointer, "\tpopq rax\t\t\t\t; bitor\n");
+                fprintf(fpointer, "\tpopq rdi\t\t\t\t; |\n");
+                fprintf(fpointer, "\tand rdi\t\t\t\t; |\n");
+                fprintf(fpointer, "\tpushq rdi\t\t\t\t; |\n");
                 break;
             case op_bitnot:
                 fprintf(fpointer, "\tpopq rax\t\t\t\t; bitnot\n");
