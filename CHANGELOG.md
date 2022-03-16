@@ -1,6 +1,6 @@
 # Changelog
 
-## Alpha 3.0
+## Alpha 3.0 (2022-3-16)
 
 Math comming to plis!  
 Some arithmetic and bitwise operations were added to plis, this introduced a few bugs, but hey it's a start. Also there is no way to print integers out easily.  
