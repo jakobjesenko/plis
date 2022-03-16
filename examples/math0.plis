@@ -1,0 +1,7 @@
+chain(
+    putc(add(mul(2, 2), 48)),
+    chain(
+        putc(add(sub(8, 6), 48)),
+        putc('\n')
+    )
+)

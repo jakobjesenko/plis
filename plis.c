@@ -145,6 +145,15 @@ void insertASTNode(token tokenised[], int programCounter, astNode* branch){
             case op_bitnot:
                 assert(i < 2 && "bitnot only takes 1 argument");
                 break;
+            case op_add:
+                assert(i < 3 && "add only takes 2 arguments");
+                break;
+            case op_sub:
+                assert(i < 3 && "sub only takes 2 arguments");
+                break;
+            case op_mul:
+                assert(i < 3 && "mul only takes 2 arguments");
+                break;
             case op_testingop:
                 break;
             default:
@@ -258,47 +267,65 @@ void printAsmProgram(FILE* fpointer, astNode* node){
             break;
         }
         printAsmProgram(fpointer, node->child[i]);
-        switch (node->opnum){
-            case op_nop:
-                break;
-            case op_exit:
-                fprintf(fpointer, "\tmov rax, 60\t\t\t\t; exit\n");
-                fprintf(fpointer, "\tpopq rdi\t\t\t\t; |\n");
-                fprintf(fpointer, "\tsyscall\t\t\t\t; |\n");
-                break;
-            case op_putc:
-                fprintf(fpointer, "\tmov rax, 1\t\t\t\t; putc\n");
-                fprintf(fpointer, "\tmov rdi, 1\t\t\t\t; |\n");
-                fprintf(fpointer, "\tmov rsi, rsp\t\t\t\t; |\n");
-                fprintf(fpointer, "\tmov rdx, 1\t\t\t\t; |\n");
-                fprintf(fpointer, "\tsyscall\t\t\t\t; |\n");
-                fprintf(fpointer, "\tadd rsp, 8\t\t\t\t; |\n");
-                break;
-            case op_chain:
-                break;
-            case op_bitand:
-                fprintf(fpointer, "\tpopq rax\t\t\t\t; bitand\n");
-                fprintf(fpointer, "\tpopq rdi\t\t\t\t; |\n");
-                fprintf(fpointer, "\tand rdi\t\t\t\t; |\n");
-                fprintf(fpointer, "\tpushq rdi\t\t\t\t; |\n");
-                break;
-            case op_bitor:
-                fprintf(fpointer, "\tpopq rax\t\t\t\t; bitor\n");
-                fprintf(fpointer, "\tpopq rdi\t\t\t\t; |\n");
-                fprintf(fpointer, "\tand rdi\t\t\t\t; |\n");
-                fprintf(fpointer, "\tpushq rdi\t\t\t\t; |\n");
-                break;
-            case op_bitnot:
-                fprintf(fpointer, "\tpopq rax\t\t\t\t; bitnot\n");
-                fprintf(fpointer, "\tnot rax\t\t\t\t; |\n");
-                fprintf(fpointer, "\tpushq rax\t\t\t\t; |\n");
-                break;
-            case op_testingop:
-                break;
-            default:
-                assert(0 && "not recognised operation");
-                break;
-        }
+    }
+    switch (node->opnum){
+        case op_nop:
+            break;
+        case op_exit:
+            fprintf(fpointer, "\tmov rax, 60\t\t\t\t; exit\n");
+            fprintf(fpointer, "\tpopq rdi\t\t\t\t; |\n");
+            fprintf(fpointer, "\tsyscall\t\t\t\t; |\n");
+            break;
+        case op_putc:
+            fprintf(fpointer, "\tmov rax, 1\t\t\t\t; putc\n");
+            fprintf(fpointer, "\tmov rdi, 1\t\t\t\t; |\n");
+            fprintf(fpointer, "\tmov rsi, rsp\t\t\t\t; |\n");
+            fprintf(fpointer, "\tmov rdx, 1\t\t\t\t; |\n");
+            fprintf(fpointer, "\tsyscall\t\t\t\t; |\n");
+            fprintf(fpointer, "\tadd rsp, 8\t\t\t\t; |\n");
+            break;
+        case op_chain:
+            break;
+        case op_bitand:
+            fprintf(fpointer, "\tpopq rax\t\t\t\t; bitand\n");
+            fprintf(fpointer, "\tpopq rdi\t\t\t\t; |\n");
+            fprintf(fpointer, "\tand rdi, rax\t\t\t\t; |\n");
+            fprintf(fpointer, "\tpushq rdi\t\t\t\t; |\n");
+            break;
+        case op_bitor:
+            fprintf(fpointer, "\tpopq rax\t\t\t\t; bitor\n");
+            fprintf(fpointer, "\tpopq rdi\t\t\t\t; |\n");
+            fprintf(fpointer, "\tor rdi, rax\t\t\t\t; |\n");
+            fprintf(fpointer, "\tpushq rdi\t\t\t\t; |\n");
+            break;
+        case op_bitnot:
+            fprintf(fpointer, "\tpopq rax\t\t\t\t; bitnot\n");
+            fprintf(fpointer, "\tnot rax\t\t\t\t; |\n");
+            fprintf(fpointer, "\tpushq rax\t\t\t\t; |\n");
+            break;
+        case op_add:
+            fprintf(fpointer, "\tpopq rax\t\t\t\t; add\n");
+            fprintf(fpointer, "\tpopq rdi\t\t\t\t; |\n");
+            fprintf(fpointer, "\tadd rdi, rax\t\t\t\t; |\n");
+            fprintf(fpointer, "\tpushq rdi\t\t\t\t; |\n");
+            break;
+        case op_sub:
+            fprintf(fpointer, "\tpopq rax\t\t\t\t; sub\n");
+            fprintf(fpointer, "\tpopq rdi\t\t\t\t; |\n");
+            fprintf(fpointer, "\tsub rdi, rax\t\t\t\t; |\n");
+            fprintf(fpointer, "\tpushq rdi\t\t\t\t; |\n");
+            break;
+        case op_mul:
+            fprintf(fpointer, "\tpopq rax\t\t\t\t; mul\n");
+            fprintf(fpointer, "\tpopq rdi\t\t\t\t; |\n");
+            fprintf(fpointer, "\timul rdi, rax\t\t\t\t; |\n");
+            fprintf(fpointer, "\tpushq rdi\t\t\t\t; |\n");
+            break;
+        case op_testingop:
+            break;
+        default:
+            assert(0 && "not recognised operation");
+            break;
     }
 }
 

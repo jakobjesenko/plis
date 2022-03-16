@@ -2,9 +2,11 @@
 
 ## Alpha 3.0
 
-math comming to plis!!!
+Math comming to plis!  
+Some arithmetic and bitwise operations were added to plis, this introduced a few bugs, but hey it's a start. Also there is no way to print integers out easily.  
+[simple example](examples/math0.plis)
 
-~18446744073709551550 = 65
+for reference: ~18446744073709551550 = 65
 
 ### New Operations:
 | operation              | usage                       | description   |
@@ -12,6 +14,18 @@ math comming to plis!!!
 | `bitnot(x)`            | bitnot(int:x) -> int        | bitwise not operator |
 | `bitand(a, b)`         | bitand(int:a, int:b) -> int | bitwise and operator |
 | `bitor(a, b)`          | bitor(int:a, int:b) -> int  | bitwise or operator |
+| `add(a, b)`            | and(int:a, int:b) -> int    | a + b |
+| `sub(a, b)`            | sub(int:a, int:b) -> int    | a - b |
+| `mul(a, b)`            | mul(int:a, int:b) -> int    | a \* b |
+
+### Bugfixes:
+- Corrected code in `printAsmProgram`, that cosed operations with multiple arguments to print more than once during compilation
+
+### Possible improvements:
+- [ ] make nop waste a cpu cycle
+- [ ] character literals of numerical values get parsed as integers, **which they should not**
+- [ ] look into how div instruction works on x86_64
+- [ ] make a function, that prints integers
 
 ## Alpha 2.0 (2022-3-14)
 

@@ -1,4 +1,6 @@
 chain(
-    putc(bitnot(18446744073709551550)),
+    putc(
+        add(mul(6, 8), 2)
+    ),
     putc('\n')
 )
