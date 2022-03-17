@@ -1,5 +1,21 @@
 # Changelog
 
+## Alpha 3.1 (2022-3-17)
+
+Reading characters from stdin. Putc is now buffered, to not waste time on write syscalls. Assembly output gets reformatted to look prettier. Also fixed zero-argument function compiling problems.  
+mostly quality of life changes.
+
+### New Operations:
+| operation              | usage                       | description   |
+| :--------------------: | :-------------------------- | :------------ |
+| `getc()`               | getc() -> int               | reads one character from stdin |
+
+### Possible improvements:
+- [x] make nop waste a cpu cycle
+- [ ] character literals of numerical values get parsed as integers, **which they should not**
+- [ ] look into how div instruction works on x86_64
+- [ ] make a function, that prints integers
+
 ## Alpha 3.0 (2022-3-16)
 
 Math comming to plis!  

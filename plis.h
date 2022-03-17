@@ -9,14 +9,16 @@
 #include <ctype.h>
 
 #define BRACKET_STACK_DEPTH 128
-#define TOKEN_ARRAY_LENGHT 256
+#define TOKEN_ARRAY_LENGTH 256
 #define MAX_WORD_LENGTH 32
 #define MAX_ARGUMENT_COUNT 8
+#define WRITE_BUFFER_LENGTH 128
 
 typedef enum {
     op_nop,
     op_exit,
     op_putc,
+    op_getc,
     op_chain,
     op_bitand,
     op_bitor,
@@ -35,6 +37,7 @@ char* keywords[] = {
     "nop",
     "exit",
     "putc",
+    "getc",
     "chain",
     "bitand",
     "bitor",
@@ -66,6 +69,10 @@ typedef struct {
     bool tokens;
     bool tree;
     bool assembly;
+    bool nooutbuffer;
 } flagList;
+
+static bool buffered_write = true;
+static int putc_calls_count = 0;
 
 #endif

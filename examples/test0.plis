@@ -1,6 +1,9 @@
-chain(
-    putc(
-        add(mul(6, 8), 2)
-    ),
-    putc('\n')
+chain(putc(33),
+    chain(putc('\n'),
+        chain(putc('A'),
+            chain(putc('B'),
+                putc(10)
+            )
+        )
+    )
 )

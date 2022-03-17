@@ -1,0 +1,8 @@
+chain(
+    putc(
+        add(add(
+        sub(getc(), 48),
+        sub(getc(), 48)
+    ), 48))
+    putc('\n')
+)

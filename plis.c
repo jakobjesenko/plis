@@ -1,5 +1,6 @@
 #include "plis.h"
 
+
 void lex(char* codeFileName, token tokenised[]){
     FILE* f = fopen(codeFileName, "r");
     char c;
@@ -34,15 +35,17 @@ void lex(char* codeFileName, token tokenised[]){
             case '(':
                 bracketStack[bracketSP++] = c;
                 assert(wordIndex && "keyword missing");
-                bool finished = false;
+                bool found = false;
                 for (int i = 0; i < count_op; i++){
                     if (!strcmp(word, keywords[i])){
-                        tokenised[programCounter++] = (token){row, col - strlen(word), i, NULL};
-                        finished = true;
+                        char* info = (char*)malloc(sizeof(char));
+                        info[0] = '1'; // proxy info to differentiate nop from empty token
+                        tokenised[programCounter++] = (token){row, col - strlen(word), i, info};
+                        found = true;
                         break;
                     }
                 }
-                assert(finished && "unrecognised keyword");
+                assert(found && "unrecognised keyword");
                 tokenised[programCounter++] = (token){row, col, op_argstart, NULL};
                 wordIndex = 0;
                 break;
@@ -83,7 +86,7 @@ void lex(char* codeFileName, token tokenised[]){
 
 void printTokenisedProgram(FILE* fpointer, token tokenised[]){
     token t;
-    for (int i = 0; i < TOKEN_ARRAY_LENGHT; i++){
+    for (int i = 0; i < TOKEN_ARRAY_LENGTH; i++){
         t = tokenised[i];
         if (!t.row){
             return;
@@ -133,6 +136,8 @@ void insertASTNode(token tokenised[], int programCounter, astNode* branch){
             case op_putc:
                 assert(i < 2 && "putc only takes 1 argument");
                 break;
+            case op_getc:
+                break;
             case op_chain:
                 assert(i < 3 && "chain only takes 2 arguments");
                 break;
@@ -181,10 +186,8 @@ void printAST(FILE* fpointer, astNode* node, int depth){
     for (int i = 0; i < depth; i++){
         fprintf(fpointer, "  ");
     }
-    if (node->opnum == op_nop || node->opnum == not_op){
-        if (!node->info){
-            return;
-        }
+
+    if (node->opnum == not_op){
         fprintf(fpointer, "%s  %s\n", keywords[node->opnum], node->info);
         return;
     }
@@ -248,10 +251,7 @@ char parseChar(char* str){
 
 void printAsmProgram(FILE* fpointer, astNode* node){
     // TODO rework this bottom condition
-    if (node->opnum == op_nop || node->opnum == not_op){
-        if (!node->info){
-            return;
-        }
+    if (node->opnum == not_op){
         if (isNumber(node->info)){
             fprintf(fpointer, "\tpushq %s\t\t\t\t; params push\n", node->info);
         } else if (node->info[0] == '\\' && strlen(node->info) == 2) {
@@ -270,6 +270,7 @@ void printAsmProgram(FILE* fpointer, astNode* node){
     }
     switch (node->opnum){
         case op_nop:
+            fprintf(fpointer, "\tmov rax, rax\t\t\t\t; nop\n");
             break;
         case op_exit:
             fprintf(fpointer, "\tmov rax, 60\t\t\t\t; exit\n");
@@ -277,13 +278,37 @@ void printAsmProgram(FILE* fpointer, astNode* node){
             fprintf(fpointer, "\tsyscall\t\t\t\t; |\n");
             break;
         case op_putc:
-            fprintf(fpointer, "\tmov rax, 1\t\t\t\t; putc\n");
-            fprintf(fpointer, "\tmov rdi, 1\t\t\t\t; |\n");
+            if (buffered_write){
+                fprintf(fpointer, "\tpopq rax\t\t\t\t; putc\n");
+                fprintf(fpointer, "\tlea rdi, [writebuffer]\t\t\t\t; |\n");
+                fprintf(fpointer, "\tadd rdi, [bufferpointer]\t\t\t\t; |\n");
+                fprintf(fpointer, "\tadd [bufferpointer], 1\t\t\t\t; |\n");
+                fprintf(fpointer, "\tmov [rdi], rax\t\t\t\t; |\n");
+                fprintf(fpointer, "\tcmp rax, 10\t\t\t\t; |\n");
+                fprintf(fpointer, "\tjne putlabel%d\t\t\t\t; |\n", putc_calls_count);
+                fprintf(fpointer, "\tmov rax, 1\t\t\t\t; |\n");
+                fprintf(fpointer, "\tmov rdi, 1\t\t\t\t; |\n");
+                fprintf(fpointer, "\tlea rsi, [writebuffer]\t\t\t\t; |\n");
+                fprintf(fpointer, "\tmov rdx, [bufferpointer]\t\t\t\t; |\n");
+                fprintf(fpointer, "\tsyscall\t\t\t\t; |\n");
+                fprintf(fpointer, "\tmov [bufferpointer], 0\t\t\t\t; |\n");
+                fprintf(fpointer, "putlabel%d:\t\t\t\t; |\n", putc_calls_count++);
+            } else {
+                fprintf(fpointer, "\tmov rax, 1\t\t\t\t; putc\n");
+                fprintf(fpointer, "\tmov rdi, 1\t\t\t\t; |\n");
+                fprintf(fpointer, "\tmov rsi, rsp\t\t\t\t; |\n");
+                fprintf(fpointer, "\tmov rdx, 1\t\t\t\t; |\n");
+                fprintf(fpointer, "\tsyscall\t\t\t\t; |\n");
+                fprintf(fpointer, "\tadd rsp, 8\t\t\t\t; |\n");
+            }
+            break;
+        case op_getc:
+            fprintf(fpointer, "\tsub rsp, 8\t\t\t\t; getc\n");
+            fprintf(fpointer, "\tmov rax, 0\t\t\t\t; |\n");
+            fprintf(fpointer, "\tmov rdi, 0\t\t\t\t; |\n");
             fprintf(fpointer, "\tmov rsi, rsp\t\t\t\t; |\n");
             fprintf(fpointer, "\tmov rdx, 1\t\t\t\t; |\n");
             fprintf(fpointer, "\tsyscall\t\t\t\t; |\n");
-            fprintf(fpointer, "\tadd rsp, 8\t\t\t\t; |\n");
-            break;
         case op_chain:
             break;
         case op_bitand:
@@ -335,10 +360,16 @@ void printAsmExit(FILE* fpointer){
     fprintf(fpointer, "\tsyscall\n");
 }
 
+void printAsmFooter(FILE* fpointer){
+    fprintf(fpointer, "segment readable writable\n");
+    fprintf(fpointer, "bufferpointer dq 0\n");
+    fprintf(fpointer, "writebuffer rb %d\n", WRITE_BUFFER_LENGTH);
+}
+
 int main(int argc, char const *argv[]) {
     assert(sizeof(keywords) / sizeof(char*) == count_op && "keywords counts do not match");
 
-    static token tokenised[TOKEN_ARRAY_LENGHT] = {0};
+    static token tokenised[TOKEN_ARRAY_LENGTH] = {0};
 
     flagList flags = {0};
     char* tokenOutFilename;
@@ -377,6 +408,10 @@ int main(int argc, char const *argv[]) {
                         assert(0 && "filename missing");
                     }
                     break;
+                case 'n':
+                    flags.nooutbuffer = true;
+                    buffered_write = false;
+                    break;
                 case 'h':
                     flags.help = true;
                     break;
@@ -391,7 +426,7 @@ int main(int argc, char const *argv[]) {
     }
 
     if (flags.help){
-        printf("help needs implemented\n");
+        printf("help needs implemented\n\tflags:[-a, -h, -n, -s, -t]\n");
         return 0;
     }
 
@@ -423,9 +458,13 @@ int main(int argc, char const *argv[]) {
     printAsmHead(assemblyOutFile);
     printAsmProgram(assemblyOutFile, ast);
     printAsmExit(assemblyOutFile);
+    printAsmFooter(assemblyOutFile);
     fclose(assemblyOutFile);
 
     char command[256];
+    strcpy(command, "./asmreformat.py ");
+    strcat(command, assemblyOutFilename);
+    system(command);
     strcpy(command, "fasm ");
     strcat(command, assemblyOutFilename);
     strcat(command, " ");
