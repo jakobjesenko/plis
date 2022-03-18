@@ -1,4 +1,10 @@
 chain(
-    prints("beseda"),
-    putc(10)
+    chain( 
+        chain(
+            putc('A'),
+            putc(33)
+        )
+        prints("vmes")
+    ),
+    putc('\n')
 )

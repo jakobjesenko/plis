@@ -137,7 +137,10 @@ void insertASTNode(token tokenised[], int programCounter, astNode* branch){
             case op_getc:
                 break;
             case op_prints:
-                assert(i < 2 && "writes only takes 1 argument");
+                assert(i < 2 && "prints only takes 1 argument");
+                break;
+            case op_reads:
+                break;
             case op_chain:
                 assert(i < 3 && "chain only takes 2 arguments");
                 break;
@@ -158,6 +161,9 @@ void insertASTNode(token tokenised[], int programCounter, astNode* branch){
                 break;
             case op_mul:
                 assert(i < 3 && "mul only takes 2 arguments");
+                break;
+            case op_parseint:
+                assert(i < 2 && "parseint only takes 1 argument");
                 break;
             case op_testingop:
                 break;
@@ -220,7 +226,7 @@ bool isNumber(char* x){
 }
 
 char parseChar(char* str){
-    switch (str[1]){
+    switch (str[2]){
         case 'a':
             return '\a';
         case 'b':
@@ -315,11 +321,23 @@ void printAsmProgram(FILE* fpointer, astNode* node, char* stringVariables[]){
             fprintf(fpointer, "\tsyscall\t\t\t\t; |\n");
             break;
         case op_prints:
-            fprintf(fpointer, "\tmov rax, 1\t\t\t\t; prints\n");
+            fprintf(fpointer, "\tcmp [bufferpointer], 0\t\t\t\t; prints\n");
+            fprintf(fpointer, "\tje putlabel%d\t\t\t\t; |\n", putc_calls_count);
+            fprintf(fpointer, "\tmov rax, 1\t\t\t\t; |\n");
+            fprintf(fpointer, "\tmov rdi, 1\t\t\t\t; |\n");
+            fprintf(fpointer, "\tlea rsi, [writebuffer]\t\t\t\t; |\n");
+            fprintf(fpointer, "\tmov rdx, [bufferpointer]\t\t\t\t; |\n");
+            fprintf(fpointer, "\tsyscall\t\t\t\t; |\n");
+            fprintf(fpointer, "putlabel%d:\t\t\t\t; |\n", putc_calls_count++);
+            fprintf(fpointer, "\tmov rax, 1\t\t\t\t; \n");
             fprintf(fpointer, "\tmov rdi, 1\t\t\t\t; |\n");
             fprintf(fpointer, "\tpopq rsi\t\t\t\t; |\n");
             fprintf(fpointer, "\tpopq rdx\t\t\t\t; |\n");
             fprintf(fpointer, "\tsyscall\t\t\t\t; |\n");
+            break;
+        case op_reads:
+            // TODO read arbitrary number of characters, how?
+            break;
         case op_chain:
             break;
         case op_bitand:
@@ -356,6 +374,18 @@ void printAsmProgram(FILE* fpointer, astNode* node, char* stringVariables[]){
             fprintf(fpointer, "\tpopq rdi\t\t\t\t; |\n");
             fprintf(fpointer, "\timul rdi, rax\t\t\t\t; |\n");
             fprintf(fpointer, "\tpushq rdi\t\t\t\t; |\n");
+            break;
+        case op_parseint:
+            fprintf(fpointer, "\tpopq rsi\t\t\t\t; parseint\n");
+            fprintf(fpointer, "\tpopq rdx\t\t\t\t; |\n");
+            fprintf(fpointer, "\tmov rcx, rdx\t\t\t\t; |\n"); // set pointer
+            fprintf(fpointer, "putlabel%d:\t\t\t\t; |\n", putc_calls_count); // TODO migrate this label id to a different one
+            fprintf(fpointer, "\tsub rcx, 1\t\t\t\t; |\n"); // decrement pointer
+            fprintf(fpointer, "\tmov rbx, [rsi+rcx]\t\t\t\t; |\n"); // does this work?
+            fprintf(fpointer, "\tadd rax, rbx\t\t\t\t; |\n");
+            fprintf(fpointer, "\tcmp rcx, 0\t\t\t\t; |\n");
+            fprintf(fpointer, "\tje putlabel%d\t\t\t\t; |\n", putc_calls_count++);
+            fprintf(fpointer, "\tpushq rax\t\t\t\t; |\n");
             break;
         case op_testingop:
             break;
