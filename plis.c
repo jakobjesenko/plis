@@ -14,16 +14,14 @@ void lex(char* codeFileName, token tokenised[]){
     bool insideChar = false;
 
     while ((c = fgetc(f)) != EOF){
-        if (c == '\''){
-            insideChar = insideChar ? false : true;
-        } else {
-            if (insideChar){
-                goto skipstuff;
-            }
+        if (c == '\'' && insideChar){
+            insideChar = false;
+        }
+        if (insideChar){
+            goto skipstuff;
         }
         switch (c){
             case ' ':
-            case '\'':
                 break;
             case '\t':
                 col +=3;
@@ -138,6 +136,8 @@ void insertASTNode(token tokenised[], int programCounter, astNode* branch){
                 break;
             case op_getc:
                 break;
+            case op_prints:
+                assert(i < 2 && "writes only takes 1 argument");
             case op_chain:
                 assert(i < 3 && "chain only takes 2 arguments");
                 break;
@@ -211,7 +211,6 @@ void printAsmHead(FILE* fpointer){
 
 bool isNumber(char* x){
     while (*x){
-
         if (!isdigit(*x)){
             return false;
         }
@@ -249,15 +248,20 @@ char parseChar(char* str){
     }
 }
 
-void printAsmProgram(FILE* fpointer, astNode* node){
-    // TODO rework this bottom condition
+void printAsmProgram(FILE* fpointer, astNode* node, char* stringVariables[]){
     if (node->opnum == not_op){
         if (isNumber(node->info)){
             fprintf(fpointer, "\tpushq %s\t\t\t\t; params push\n", node->info);
-        } else if (node->info[0] == '\\' && strlen(node->info) == 2) {
-            fprintf(fpointer, "\tpushq %d\t\t\t\t; params push\n", (int)parseChar(node->info));
+        } else if (node[0].info[0] == '\''){
+            if (node->info[1] == '\\' && strlen(node->info) == 4) {
+                fprintf(fpointer, "\tpushq %d\t\t\t\t; params push\n", (int)parseChar(node->info));
+            } else {
+                fprintf(fpointer, "\tpushq %d\t\t\t\t; params push\n", (int)node->info[1]);
+            }
         } else {
-            fprintf(fpointer, "\tpushq %d\t\t\t\t; params push\n", (int)*(node->info));
+            fprintf(fpointer, "\tpushq %d\t\t\t\t; string length\n", (int)strlen(node->info));
+            fprintf(fpointer, "\tpushq stringvar%d\t\t\t\t; string var def\n", string_variable_count);
+            stringVariables[string_variable_count++] = node->info;
         }
         return;
     }
@@ -266,7 +270,7 @@ void printAsmProgram(FILE* fpointer, astNode* node){
         if (!node->child[i]){
             break;
         }
-        printAsmProgram(fpointer, node->child[i]);
+        printAsmProgram(fpointer, node->child[i], stringVariables);
     }
     switch (node->opnum){
         case op_nop:
@@ -308,6 +312,13 @@ void printAsmProgram(FILE* fpointer, astNode* node){
             fprintf(fpointer, "\tmov rdi, 0\t\t\t\t; |\n");
             fprintf(fpointer, "\tmov rsi, rsp\t\t\t\t; |\n");
             fprintf(fpointer, "\tmov rdx, 1\t\t\t\t; |\n");
+            fprintf(fpointer, "\tsyscall\t\t\t\t; |\n");
+            break;
+        case op_prints:
+            fprintf(fpointer, "\tmov rax, 1\t\t\t\t; prints\n");
+            fprintf(fpointer, "\tmov rdi, 1\t\t\t\t; |\n");
+            fprintf(fpointer, "\tpopq rsi\t\t\t\t; |\n");
+            fprintf(fpointer, "\tpopq rdx\t\t\t\t; |\n");
             fprintf(fpointer, "\tsyscall\t\t\t\t; |\n");
         case op_chain:
             break;
@@ -360,16 +371,20 @@ void printAsmExit(FILE* fpointer){
     fprintf(fpointer, "\tsyscall\n");
 }
 
-void printAsmFooter(FILE* fpointer){
+void printAsmFooter(FILE* fpointer, char* stringVariables[]){
     fprintf(fpointer, "segment readable writable\n");
     fprintf(fpointer, "bufferpointer dq 0\n");
     fprintf(fpointer, "writebuffer rb %d\n", WRITE_BUFFER_LENGTH);
+    for (int i  = 0; i < string_variable_count; i++){
+        fprintf(fpointer, "stringvar%d db %s\n", i, stringVariables[i]);
+    }
 }
 
 int main(int argc, char const *argv[]) {
     assert(sizeof(keywords) / sizeof(char*) == count_op && "keywords counts do not match");
 
     static token tokenised[TOKEN_ARRAY_LENGTH] = {0};
+    static char* stringVariables[MAX_STRING_COUNT];
 
     flagList flags = {0};
     char* tokenOutFilename;
@@ -456,9 +471,9 @@ int main(int argc, char const *argv[]) {
     }
     FILE* assemblyOutFile = fopen(assemblyOutFilename, "w");
     printAsmHead(assemblyOutFile);
-    printAsmProgram(assemblyOutFile, ast);
+    printAsmProgram(assemblyOutFile, ast, stringVariables);
     printAsmExit(assemblyOutFile);
-    printAsmFooter(assemblyOutFile);
+    printAsmFooter(assemblyOutFile, stringVariables);
     fclose(assemblyOutFile);
 
     char command[256];

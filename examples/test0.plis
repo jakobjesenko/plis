@@ -1,9 +1,4 @@
-chain(putc(33),
-    chain(putc('\n'),
-        chain(putc('A'),
-            chain(putc('B'),
-                putc(10)
-            )
-        )
-    )
+chain(
+    prints("beseda"),
+    putc(10)
 )
