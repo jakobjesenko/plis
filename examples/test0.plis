@@ -1,10 +1,7 @@
 chain(
-    chain( 
-        chain(
-            putc('A'),
-            putc(33)
-        )
-        prints("vmes")
-    ),
-    putc('\n')
+    putc(add('0', parseint("9")))
+    chain(
+        prints(" je dobro!"),
+        putc('\n')
+    )
 )

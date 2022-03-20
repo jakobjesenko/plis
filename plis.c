@@ -12,12 +12,14 @@ void lex(char* codeFileName, token tokenised[]){
     char bracketStack[BRACKET_STACK_DEPTH];
     int bracketSP = 0;
     bool insideChar = false;
+    bool insideString = false;
 
     while ((c = fgetc(f)) != EOF){
         if (c == '\'' && insideChar){
             insideChar = false;
         }
-        if (insideChar){
+        insideString = (c == '\"') != insideString;
+        if (insideChar || insideString){
             goto skipstuff;
         }
         switch (c){
@@ -265,7 +267,7 @@ void printAsmProgram(FILE* fpointer, astNode* node, char* stringVariables[]){
                 fprintf(fpointer, "\tpushq %d\t\t\t\t; params push\n", (int)node->info[1]);
             }
         } else {
-            fprintf(fpointer, "\tpushq %d\t\t\t\t; string length\n", (int)strlen(node->info));
+            //fprintf(fpointer, "\tpushq %d\t\t\t\t; string length\n", (int)strlen(node->info));
             fprintf(fpointer, "\tpushq stringvar%d\t\t\t\t; string var def\n", string_variable_count);
             stringVariables[string_variable_count++] = node->info;
         }
@@ -301,7 +303,7 @@ void printAsmProgram(FILE* fpointer, astNode* node, char* stringVariables[]){
                 fprintf(fpointer, "\tlea rsi, [writebuffer]\t\t\t\t; |\n");
                 fprintf(fpointer, "\tmov rdx, [bufferpointer]\t\t\t\t; |\n");
                 fprintf(fpointer, "\tsyscall\t\t\t\t; |\n");
-                fprintf(fpointer, "\tmov [bufferpointer], 0\t\t\t\t; |\n");
+                fprintf(fpointer, "\tmov [bufferpointer], 0\t\t\t\t; |\n"); // reset writebuffer
                 fprintf(fpointer, "putlabel%d:\t\t\t\t; |\n", putc_calls_count++);
             } else {
                 fprintf(fpointer, "\tmov rax, 1\t\t\t\t; putc\n");
@@ -321,18 +323,25 @@ void printAsmProgram(FILE* fpointer, astNode* node, char* stringVariables[]){
             fprintf(fpointer, "\tsyscall\t\t\t\t; |\n");
             break;
         case op_prints:
-            fprintf(fpointer, "\tcmp [bufferpointer], 0\t\t\t\t; prints\n");
+            fprintf(fpointer, "\tcmp [bufferpointer], 0\t\t\t\t; prints\n"); // flush stdout if needed
             fprintf(fpointer, "\tje putlabel%d\t\t\t\t; |\n", putc_calls_count);
             fprintf(fpointer, "\tmov rax, 1\t\t\t\t; |\n");
             fprintf(fpointer, "\tmov rdi, 1\t\t\t\t; |\n");
             fprintf(fpointer, "\tlea rsi, [writebuffer]\t\t\t\t; |\n");
             fprintf(fpointer, "\tmov rdx, [bufferpointer]\t\t\t\t; |\n");
             fprintf(fpointer, "\tsyscall\t\t\t\t; |\n");
+            fprintf(fpointer, "\tmov [bufferpointer], 0\t\t\t\t; |\n"); // reset writebuffer
             fprintf(fpointer, "putlabel%d:\t\t\t\t; |\n", putc_calls_count++);
             fprintf(fpointer, "\tmov rax, 1\t\t\t\t; \n");
             fprintf(fpointer, "\tmov rdi, 1\t\t\t\t; |\n");
             fprintf(fpointer, "\tpopq rsi\t\t\t\t; |\n");
-            fprintf(fpointer, "\tpopq rdx\t\t\t\t; |\n");
+            fprintf(fpointer, "\tmov rdx, 0\t\t\t\t; |\n");
+            fprintf(fpointer, "\tmov rcx, rsi\t\t\t\t; |\n");
+            fprintf(fpointer, "putlabel%d:\t\t\t\t; |\n", putc_calls_count);
+            fprintf(fpointer, "\tadd rdx, 1\t\t\t\t; |\n");
+            fprintf(fpointer, "\tadd rcx, 1\t\t\t\t; |\n");
+            fprintf(fpointer, "\tcmp byte [rcx], 0\t\t\t\t; |\n");
+            fprintf(fpointer, "\tjne putlabel%d\t\t\t\t; |\n", putc_calls_count++);
             fprintf(fpointer, "\tsyscall\t\t\t\t; |\n");
             break;
         case op_reads:
@@ -377,14 +386,21 @@ void printAsmProgram(FILE* fpointer, astNode* node, char* stringVariables[]){
             break;
         case op_parseint:
             fprintf(fpointer, "\tpopq rsi\t\t\t\t; parseint\n");
-            fprintf(fpointer, "\tpopq rdx\t\t\t\t; |\n");
-            fprintf(fpointer, "\tmov rcx, rdx\t\t\t\t; |\n"); // set pointer
-            fprintf(fpointer, "putlabel%d:\t\t\t\t; |\n", putc_calls_count); // TODO migrate this label id to a different one
-            fprintf(fpointer, "\tsub rcx, 1\t\t\t\t; |\n"); // decrement pointer
-            fprintf(fpointer, "\tmov rbx, [rsi+rcx]\t\t\t\t; |\n"); // does this work?
-            fprintf(fpointer, "\tadd rax, rbx\t\t\t\t; |\n");
-            fprintf(fpointer, "\tcmp rcx, 0\t\t\t\t; |\n");
-            fprintf(fpointer, "\tje putlabel%d\t\t\t\t; |\n", putc_calls_count++);
+            fprintf(fpointer, "\tmov rdi, rsi\t\t\t\t; |\n");
+            fprintf(fpointer, "putlabel%d:\t\t\t\t; |\n", putc_calls_count);
+            fprintf(fpointer, "\tadd rdi, 1\t\t\t\t; |\n");
+            fprintf(fpointer, "\tcmp byte [rdi], 0\t\t\t\t; |\n");
+            fprintf(fpointer, "\tjne putlabel%d\t\t\t\t; |\n", putc_calls_count++);
+            fprintf(fpointer, "\tmov rax, 0\t\t\t\t; |\n");
+            fprintf(fpointer, "\tmov rdx, 0\t\t\t\t; |\n"); // exponent
+            fprintf(fpointer, "putlabel%d:\t\t\t\t; |\n", putc_calls_count);
+            fprintf(fpointer, "\tsub rdi, 1\t\t\t\t; |\n");
+            fprintf(fpointer, "\tmov rbx, [rdi]\t\t\t\t; |\n");
+            fprintf(fpointer, "\tsub rbx, 48\t\t\t\t; |\n");
+            fprintf(fpointer, "\tadd rax, rbx\t\t\t\t; |\n"); // TODO self evident
+            fprintf(fpointer, "\tadd rdx, 1\t\t\t\t; |\n");
+            fprintf(fpointer, "\tcmp rsi, rdi\t\t\t\t; |\n");
+            fprintf(fpointer, "\tjne putlabel%d\t\t\t\t; |\n", putc_calls_count++);
             fprintf(fpointer, "\tpushq rax\t\t\t\t; |\n");
             break;
         case op_testingop:
@@ -406,7 +422,7 @@ void printAsmFooter(FILE* fpointer, char* stringVariables[]){
     fprintf(fpointer, "bufferpointer dq 0\n");
     fprintf(fpointer, "writebuffer rb %d\n", WRITE_BUFFER_LENGTH);
     for (int i  = 0; i < string_variable_count; i++){
-        fprintf(fpointer, "stringvar%d db %s\n", i, stringVariables[i]);
+        fprintf(fpointer, "stringvar%d db %s, 0\n", i, stringVariables[i]);
     }
 }
 
