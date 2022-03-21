@@ -1,8 +1,8 @@
 # Changelog
 
-## Alpha 3.2
+## Alpha 3.2 (2022-3-21)
 
-More quality of life. Printing strings and conversion to integers. Those changes bring an easier implementation of [hello world program](examples/hello1.plis).
+More quality of life. Printing strings and conversion to integers. Those changes bring an easier implementation of [hello world program](examples/hello1.plis). String values are now passed around as null terminated srings, instead of also passing their length.
 
 ### New Operations:
 | operation              | usage                       | description   |
