@@ -1,5 +1,20 @@
 # Changelog
 
+## Alpha 3.3
+
+### New Operations:
+| operation              | usage                       | description   |
+| :--------------------: | :-------------------------- | :------------ |
+| `div(a, b)`            | div(int:a, int:b) -> int    | a / b         |
+| `mod(a, b)`            | mod(int:a, int:b) -> int    | a % b         |
+
+### Possible improvements:
+- [x] look into how div instruction works on x86_64
+- [ ] make a function, that prints integers
+- [ ] strings do not support escaped and special characters
+- [ ] follow register purpose convention and rename labels
+
+
 ## Alpha 3.2 (2022-3-21)
 
 More quality of life. Printing strings and conversion to integers. Those changes bring an easier implementation of [hello world program](examples/hello1.plis). String values are now passed around as null terminated srings, instead of also passing their length.

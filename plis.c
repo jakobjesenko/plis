@@ -164,6 +164,12 @@ void insertASTNode(token tokenised[], int programCounter, astNode* branch){
             case op_mul:
                 assert(i < 3 && "mul only takes 2 arguments");
                 break;
+            case op_div:
+                assert(i < 3 && "div only takes 2 arguments");
+                break;
+            case op_mod:
+                assert(i < 3 && "mod only takes 2 arguments");
+                break;
             case op_parseint:
                 assert(i < 2 && "parseint only takes 1 argument");
                 break;
@@ -383,6 +389,20 @@ void printAsmProgram(FILE* fpointer, astNode* node, char* stringVariables[]){
             fprintf(fpointer, "\tpopq rdi\t\t\t\t; |\n");
             fprintf(fpointer, "\timul rdi, rax\t\t\t\t; |\n");
             fprintf(fpointer, "\tpushq rdi\t\t\t\t; |\n");
+            break;
+        case op_div:
+            fprintf(fpointer, "\tpopq rbx\t\t\t\t; div\n");
+            fprintf(fpointer, "\tpopq rax\t\t\t\t; |\n");
+            fprintf(fpointer, "\tmov rdx, 0\t\t\t\t; |\n");
+            fprintf(fpointer, "\tidiv rbx\t\t\t\t; |\n");
+            fprintf(fpointer, "\tpushq rax\t\t\t\t; |\n");
+            break;
+        case op_mod:
+            fprintf(fpointer, "\tpopq rbx\t\t\t\t; mod\n");
+            fprintf(fpointer, "\tpopq rax\t\t\t\t; |\n");
+            fprintf(fpointer, "\tmov rdx, 0\t\t\t\t; |\n");
+            fprintf(fpointer, "\tidiv rbx\t\t\t\t; |\n");
+            fprintf(fpointer, "\tpushq rdx\t\t\t\t; |\n");
             break;
         case op_parseint:
             fprintf(fpointer, "\tpopq rsi\t\t\t\t; parseint\n");
