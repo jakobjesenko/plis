@@ -397,7 +397,14 @@ void printAsmProgram(FILE* fpointer, astNode* node, char* stringVariables[]){
             fprintf(fpointer, "\tsub rdi, 1\t\t\t\t; |\n");
             fprintf(fpointer, "\tmov rbx, [rdi]\t\t\t\t; |\n");
             fprintf(fpointer, "\tsub rbx, 48\t\t\t\t; |\n");
-            fprintf(fpointer, "\tadd rax, rbx\t\t\t\t; |\n"); // TODO self evident
+            fprintf(fpointer, "explabel%d:\t\t\t\t; |\n", putc_calls_count);
+            fprintf(fpointer, "\tcmp rdx, 0\t\t\t\t; |\n");
+            fprintf(fpointer, "\tje expelabel%d\t\t\t\t; |\n", putc_calls_count);
+            fprintf(fpointer, "\timul rbx, 10\t\t\t\t; |\n");
+            fprintf(fpointer, "\tsub rdx, 1\t\t\t\t; |\n");
+            fprintf(fpointer, "\tjnz explabel%d\t\t\t\t; |\n", putc_calls_count);
+            fprintf(fpointer, "expelabel%d:\t\t\t\t; |\n", putc_calls_count);
+            fprintf(fpointer, "\tadd rax, rbx\t\t\t\t; |\n");
             fprintf(fpointer, "\tadd rdx, 1\t\t\t\t; |\n");
             fprintf(fpointer, "\tcmp rsi, rdi\t\t\t\t; |\n");
             fprintf(fpointer, "\tjne putlabel%d\t\t\t\t; |\n", putc_calls_count++);

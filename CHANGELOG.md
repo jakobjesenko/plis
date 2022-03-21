@@ -1,5 +1,21 @@
 # Changelog
 
+## Alpha 3.2
+
+More quality of life. Printing strings and conversion to integers. Those changes bring an easier implementation of [hello world program](examples/hello1.plis).
+
+### New Operations:
+| operation              | usage                       | description   |
+| :--------------------: | :-------------------------- | :------------ |
+| `prints(msg)`          | prints(str:msg) -> none     | prints string variable to stdout |
+| `parseint(string)`     | parseint(str:string) -> int | converts string to an integer |
+
+### Possible improvements:
+- [x] character literals of numerical values get parsed as integers, **which they should not**
+- [ ] look into how div instruction works on x86_64
+- [ ] make a function, that prints integers
+- [ ] strings do not support escaped and special characters
+
 ## Alpha 3.1 (2022-3-17)
 
 Reading characters from stdin. Putc is now buffered, to not waste time on write syscalls. Assembly output gets reformatted to look prettier. Also fixed zero-argument function compiling problems.  
@@ -9,6 +25,7 @@ mostly quality of life changes.
 | operation              | usage                       | description   |
 | :--------------------: | :-------------------------- | :------------ |
 | `getc()`               | getc() -> int               | reads one character from stdin |
+
 
 ### Possible improvements:
 - [x] make nop waste a cpu cycle

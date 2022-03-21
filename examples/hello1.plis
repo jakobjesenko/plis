@@ -1,0 +1,4 @@
+chain(
+    prints("Hello, World!"),
+    putc('\n')
+)

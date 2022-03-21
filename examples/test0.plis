@@ -1,5 +1,5 @@
 chain(
-    putc(add('0', parseint("9")))
+    putc(parseint("33"))
     chain(
         prints(" je dobro!"),
         putc('\n')
