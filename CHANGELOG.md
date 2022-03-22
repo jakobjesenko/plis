@@ -3,10 +3,14 @@
 ## Alpha 3.3
 
 ### New Operations:
-| operation              | usage                       | description   |
-| :--------------------: | :-------------------------- | :------------ |
-| `div(a, b)`            | div(int:a, int:b) -> int    | a / b         |
-| `mod(a, b)`            | mod(int:a, int:b) -> int    | a % b         |
+| operation              | usage                             | description   |
+| :--------------------: | :-------------------------------- | :------------ |
+| `div(a, b)`            | div(int:a, int:b) -> int          | a / b         |
+| `mod(a, b)`            | mod(int:a, int:b) -> int          | a % b         |
+| `shiftl(a, offset)`    | shiftl(int:a, int:offset) -> int  | a << offset   |
+| `shiftr(a, offset)`    | shiftr(int:a, int:offset) -> int  | a >> offset   |
+| `shiftla(a, offset)`   | shiftla(int:a, int:offset) -> int | shift a left by offset, preserving sign |
+| `shiftra(a, offset)`   | shiftra(int:a, int:offset) -> int | shift a right by offset, preserving sign |
 
 ### Possible improvements:
 - [x] look into how div instruction works on x86_64

@@ -155,6 +155,18 @@ void insertASTNode(token tokenised[], int programCounter, astNode* branch){
             case op_bitnot:
                 assert(i < 2 && "bitnot only takes 1 argument");
                 break;
+            case op_shiftl:
+                assert(i < 3 && "shiftl only takes 2 arguments");
+                break;
+            case op_shiftr:
+                assert(i < 3 && "shiftr only takes 2 arguments");
+                break;
+            case op_shiftla:
+                assert(i < 3 && "shiftla only takes 2 arguments");
+                break;
+            case op_shiftra:
+                assert(i < 3 && "bitnot only takes 2 arguments");
+                break;
             case op_add:
                 assert(i < 3 && "add only takes 2 arguments");
                 break;
@@ -172,6 +184,9 @@ void insertASTNode(token tokenised[], int programCounter, astNode* branch){
                 break;
             case op_parseint:
                 assert(i < 2 && "parseint only takes 1 argument");
+                break;
+            case op_inttostr:
+                assert(i < 2 && "inttostr only takes 1 argument");
                 break;
             case op_testingop:
                 break;
@@ -273,7 +288,6 @@ void printAsmProgram(FILE* fpointer, astNode* node, char* stringVariables[]){
                 fprintf(fpointer, "\tpushq %d\t\t\t\t; params push\n", (int)node->info[1]);
             }
         } else {
-            //fprintf(fpointer, "\tpushq %d\t\t\t\t; string length\n", (int)strlen(node->info));
             fprintf(fpointer, "\tpushq stringvar%d\t\t\t\t; string var def\n", string_variable_count);
             stringVariables[string_variable_count++] = node->info;
         }
@@ -378,6 +392,30 @@ void printAsmProgram(FILE* fpointer, astNode* node, char* stringVariables[]){
             fprintf(fpointer, "\tadd rdi, rax\t\t\t\t; |\n");
             fprintf(fpointer, "\tpushq rdi\t\t\t\t; |\n");
             break;
+        case op_shiftl:
+            fprintf(fpointer, "\tpopq rcx\t\t\t\t; shiftl\n");
+            fprintf(fpointer, "\tpopq rax\t\t\t\t; |\n");
+            fprintf(fpointer, "\tshl rax, cl\t\t\t\t; |\n");
+            fprintf(fpointer, "\tpushq rax\t\t\t\t; |\n");
+            break;
+        case op_shiftr:
+            fprintf(fpointer, "\tpopq rcx\t\t\t\t; shiftr\n");
+            fprintf(fpointer, "\tpopq rax\t\t\t\t; |\n");
+            fprintf(fpointer, "\tshr rax, cl\t\t\t\t; |\n");
+            fprintf(fpointer, "\tpushq rax\t\t\t\t; |\n");
+            break;
+        case op_shiftla:
+            fprintf(fpointer, "\tpopq rcx\t\t\t\t; shiftla\n");
+            fprintf(fpointer, "\tpopq rax\t\t\t\t; |\n");
+            fprintf(fpointer, "\tsal rax, cl\t\t\t\t; |\n");
+            fprintf(fpointer, "\tpushq rax\t\t\t\t; |\n");
+            break;
+        case op_shiftra:
+            fprintf(fpointer, "\tpopq rcx\t\t\t\t; shiftra\n");
+            fprintf(fpointer, "\tpopq rax\t\t\t\t; |\n");
+            fprintf(fpointer, "\tsar rax, cl\t\t\t\t; |\n");
+            fprintf(fpointer, "\tpushq rax\t\t\t\t; |\n");
+            break;  
         case op_sub:
             fprintf(fpointer, "\tpopq rax\t\t\t\t; sub\n");
             fprintf(fpointer, "\tpopq rdi\t\t\t\t; |\n");
@@ -430,6 +468,40 @@ void printAsmProgram(FILE* fpointer, astNode* node, char* stringVariables[]){
             fprintf(fpointer, "\tjne putlabel%d\t\t\t\t; |\n", putc_calls_count++);
             fprintf(fpointer, "\tpushq rax\t\t\t\t; |\n");
             break;
+        case op_inttostr:
+            // TODO this does not work
+            fprintf(fpointer, "\tpopq rax\t\t\t\t; inttostr\n");
+            fprintf(fpointer, "\tmov rdx, rax\t\t\t\t; |\n");
+            fprintf(fpointer, "\tmov rcx, 20\t\t\t\t; |\n");
+            fprintf(fpointer, "\tmov rbx, 1\t\t\t\t; |\n");
+            fprintf(fpointer, "explabel%d:\t\t\t\t; |\n", putc_calls_count); //
+            fprintf(fpointer, "\tcmp rcx, 0\t\t\t\t; |\n");
+            fprintf(fpointer, "\tje expelabel%d\t\t\t\t; |\n", putc_calls_count);
+            fprintf(fpointer, "\timul rbx, 10\t\t\t\t; |\n");
+            fprintf(fpointer, "\tsub rcx, 1\t\t\t\t; |\n");
+            fprintf(fpointer, "\tjnz explabel%d\t\t\t\t; |\n", putc_calls_count);
+            fprintf(fpointer, "expelabel%d:\t\t\t\t; |\n", putc_calls_count); //
+            fprintf(fpointer, "\tlea rsi, [emptynumber%d]\t\t\t\t; |\n", empty_number_count);
+            fprintf(fpointer, "putlabel%d:\t\t\t\t; |\n", putc_calls_count);
+            fprintf(fpointer, "\tmov rax, rdx\t\t\t\t; |\n");
+            fprintf(fpointer, "\tmov rdx, 0\t\t\t\t; |\n");
+            fprintf(fpointer, "\tidiv rbx\t\t\t\t; |\n");
+            fprintf(fpointer, "\tadd rax, 48\t\t\t\t; |\n");
+            fprintf(fpointer, "\tmov [rsi], rax\t\t\t\t; |\n");
+            fprintf(fpointer, "\tmov r8, rax\t\t\t\t; |\n");//
+            fprintf(fpointer, "\tmov r9, rdx\t\t\t\t; |\n");
+            fprintf(fpointer, "\tmov rax, rbx\t\t\t\t; |\n");
+            fprintf(fpointer, "\tmov rbx, 10\t\t\t\t; |\n");
+            fprintf(fpointer, "\tmov rdx, 0\t\t\t\t; |\n");
+            fprintf(fpointer, "\tidiv rbx\t\t\t\t; |\n");
+            fprintf(fpointer, "\tmov rbx, rax\t\t\t\t; |\n");
+            fprintf(fpointer, "\tmov rax, r8\t\t\t\t; |\n");
+            fprintf(fpointer, "\tmov rdx, r9\t\t\t\t; |\n");//
+            fprintf(fpointer, "\tadd rsi, 1\t\t\t\t; |\n");
+            fprintf(fpointer, "\tcmp rax, 0\t\t\t\t; |\n");
+            fprintf(fpointer, "\tjne putlabel%d\t\t\t\t; |\n", putc_calls_count++);
+            fprintf(fpointer, "\tpushq emptynumber%d\t\t\t\t; |\n", empty_number_count++);
+            break;
         case op_testingop:
             break;
         default:
@@ -450,6 +522,9 @@ void printAsmFooter(FILE* fpointer, char* stringVariables[]){
     fprintf(fpointer, "writebuffer rb %d\n", WRITE_BUFFER_LENGTH);
     for (int i  = 0; i < string_variable_count; i++){
         fprintf(fpointer, "stringvar%d db %s, 0\n", i, stringVariables[i]);
+    }
+    for (int i  = 0; i < empty_number_count; i++){
+        fprintf(fpointer, "emptynumber%d db 23 dup (0)\n", i);
     }
 }
 

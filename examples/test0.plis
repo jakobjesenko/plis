@@ -1,7 +1,4 @@
 chain(
-    putc(add('0', div(12, 7))),
-    chain(
-        putc(add('0', mod(12, 7))),
-        putc('\n')
-    )
+    prints(inttostr(351837)),
+    putc('\n')
 )

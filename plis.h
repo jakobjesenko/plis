@@ -14,6 +14,7 @@
 #define MAX_ARGUMENT_COUNT 8
 #define WRITE_BUFFER_LENGTH 128
 #define MAX_STRING_COUNT 128
+#define MAX_ALLOCATED_NUMBERS 64
 
 typedef enum {
     op_nop,
@@ -26,12 +27,17 @@ typedef enum {
     op_bitand,
     op_bitor,
     op_bitnot,
+    op_shiftl,
+    op_shiftr,
+    op_shiftla,
+    op_shiftra,
     op_add,
     op_sub,
     op_mul,
     op_div,
     op_mod,
     op_parseint,
+    op_inttostr,
     op_testingop,
     op_argstart,
     op_argend,
@@ -50,12 +56,17 @@ char* keywords[] = {
     "bitand",
     "bitor",
     "bitnot",
+    "shiftl",
+    "shiftr",
+    "shiftla",
+    "shiftra",
     "add",
     "sub",
     "mul",
     "div",
     "mod",
     "parseint",
+    "inttostr",
     "testingop",
     "(",
     ")",
@@ -86,5 +97,6 @@ typedef struct {
 static bool buffered_write = true;
 static int putc_calls_count = 0;
 static int string_variable_count = 0;
+static int empty_number_count = 0;
 
 #endif
