@@ -471,35 +471,32 @@ void printAsmProgram(FILE* fpointer, astNode* node, char* stringVariables[]){
         case op_inttostr:
             // TODO this does not work
             fprintf(fpointer, "\tpopq rax\t\t\t\t; inttostr\n");
-            fprintf(fpointer, "\tmov rdx, rax\t\t\t\t; |\n");
-            fprintf(fpointer, "\tmov rcx, 20\t\t\t\t; |\n");
-            fprintf(fpointer, "\tmov rbx, 1\t\t\t\t; |\n");
-            fprintf(fpointer, "explabel%d:\t\t\t\t; |\n", putc_calls_count); //
-            fprintf(fpointer, "\tcmp rcx, 0\t\t\t\t; |\n");
-            fprintf(fpointer, "\tje expelabel%d\t\t\t\t; |\n", putc_calls_count);
-            fprintf(fpointer, "\timul rbx, 10\t\t\t\t; |\n");
-            fprintf(fpointer, "\tsub rcx, 1\t\t\t\t; |\n");
-            fprintf(fpointer, "\tjnz explabel%d\t\t\t\t; |\n", putc_calls_count);
-            fprintf(fpointer, "expelabel%d:\t\t\t\t; |\n", putc_calls_count); //
-            fprintf(fpointer, "\tlea rsi, [emptynumber%d]\t\t\t\t; |\n", empty_number_count);
-            fprintf(fpointer, "putlabel%d:\t\t\t\t; |\n", putc_calls_count);
-            fprintf(fpointer, "\tmov rax, rdx\t\t\t\t; |\n");
-            fprintf(fpointer, "\tmov rdx, 0\t\t\t\t; |\n");
-            fprintf(fpointer, "\tidiv rbx\t\t\t\t; |\n");
-            fprintf(fpointer, "\tadd rax, 48\t\t\t\t; |\n");
-            fprintf(fpointer, "\tmov [rsi], rax\t\t\t\t; |\n");
-            fprintf(fpointer, "\tmov r8, rax\t\t\t\t; |\n");//
-            fprintf(fpointer, "\tmov r9, rdx\t\t\t\t; |\n");
-            fprintf(fpointer, "\tmov rax, rbx\t\t\t\t; |\n");
+            fprintf(fpointer, "\tmov r8, rax\t\t\t\t; |\n");
             fprintf(fpointer, "\tmov rbx, 10\t\t\t\t; |\n");
+            fprintf(fpointer, "\tmov rcx, 0\t\t\t\t; |\n");
+            fprintf(fpointer, "putlabel%d:\t\t\t\t; |\n", putc_calls_count);
+            fprintf(fpointer, "\tadd rcx, 1\t\t\t\t; |\n");
             fprintf(fpointer, "\tmov rdx, 0\t\t\t\t; |\n");
             fprintf(fpointer, "\tidiv rbx\t\t\t\t; |\n");
-            fprintf(fpointer, "\tmov rbx, rax\t\t\t\t; |\n");
-            fprintf(fpointer, "\tmov rax, r8\t\t\t\t; |\n");
-            fprintf(fpointer, "\tmov rdx, r9\t\t\t\t; |\n");//
-            fprintf(fpointer, "\tadd rsi, 1\t\t\t\t; |\n");
             fprintf(fpointer, "\tcmp rax, 0\t\t\t\t; |\n");
-            fprintf(fpointer, "\tjne putlabel%d\t\t\t\t; |\n", putc_calls_count++);
+            fprintf(fpointer, "\tjnz putlabel%d\t\t\t\t; |\n", putc_calls_count++);
+            // rcx je log(rax)
+            fprintf(fpointer, "\tsub rcx, 1\t\t\t\t; |\n");
+            fprintf(fpointer, "\tmov rax, r8\t\t\t\t; |\n");
+            fprintf(fpointer, "\tlea rsi, [emptynumber%d]\t\t\t\t; |\n", empty_number_count);
+            fprintf(fpointer, "\tadd rsi, rcx\t\t\t\t; |\n");
+            fprintf(fpointer, "putlabel%d:\t\t\t\t; |\n", putc_calls_count);
+            fprintf(fpointer, "\tmov rdx, 0\t\t\t\t; |\n");
+            fprintf(fpointer, "\tidiv rbx\t\t\t\t; |\n");
+            fprintf(fpointer, "\tadd rdx, 48\t\t\t\t; |\n");
+            fprintf(fpointer, "\tmov [rsi], dl\t\t\t\t; |\n");
+            fprintf(fpointer, "\tsub rsi, 1\t\t\t\t; |\n");
+            fprintf(fpointer, "\tsub rcx, 1\t\t\t\t; |\n");
+            fprintf(fpointer, "\tjnz putlabel%d\t\t\t\t; |\n", putc_calls_count++);
+            fprintf(fpointer, "\tmov rdx, 0\t\t\t\t; |\n");
+            fprintf(fpointer, "\tidiv rbx\t\t\t\t; |\n");
+            fprintf(fpointer, "\tadd rdx, 48\t\t\t\t; |\n");
+            fprintf(fpointer, "\tmov [rsi], dl\t\t\t\t; |\n");
             fprintf(fpointer, "\tpushq emptynumber%d\t\t\t\t; |\n", empty_number_count++);
             break;
         case op_testingop:
