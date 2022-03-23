@@ -1,6 +1,8 @@
 # Changelog
 
-## Alpha 3.3
+## Alpha 3.3 (2022-3-23)
+
+A few more binary operations were added to plis. This ends the math functions implementations for the time being.
 
 ### New Operations:
 | operation              | usage                             | description   |
@@ -11,10 +13,11 @@
 | `shiftr(a, offset)`    | shiftr(int:a, int:offset) -> int  | a >> offset   |
 | `shiftla(a, offset)`   | shiftla(int:a, int:offset) -> int | shift a left by offset, preserving sign |
 | `shiftra(a, offset)`   | shiftra(int:a, int:offset) -> int | shift a right by offset, preserving sign |
+| `inttostr(n)`          | inttostr(int:n) -> str            | returns string representation of an integer   |
 
 ### Possible improvements:
 - [x] look into how div instruction works on x86_64
-- [ ] make a function, that prints integers
+- [X] make a function, that prints integers **(suplemented by inttostr and prints)**
 - [ ] strings do not support escaped and special characters
 - [ ] follow register purpose convention and rename labels
 
