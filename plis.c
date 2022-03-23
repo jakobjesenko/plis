@@ -182,6 +182,33 @@ void insertASTNode(token tokenised[], int programCounter, astNode* branch){
             case op_mod:
                 assert(i < 3 && "mod only takes 2 arguments");
                 break;
+            case op_not:
+                assert(i < 2 && "not only takes 1 argument");
+                break;
+            case op_and:
+                assert(i < 3 && "and only takes 2 arguments");
+                break;
+            case op_or:
+                assert(i < 3 && "or only takes 2 arguments");
+                break;
+            case op_eq:
+                assert(i < 3 && "== only takes 2 arguments");
+                break;
+            case op_neq:
+                assert(i < 3 && "!= only takes 2 arguments");
+                break;
+            case op_lt:
+                assert(i < 3 && "< only takes 2 arguments");
+                break;
+            case op_gt:
+                assert(i < 3 && "> only takes 2 arguments");
+                break;
+            case op_le:
+                assert(i < 3 && "<= only takes 2 arguments");
+                break;
+            case op_ge:
+                assert(i < 3 && ">= only takes 2 arguments");
+                break;
             case op_parseint:
                 assert(i < 2 && "parseint only takes 1 argument");
                 break;
@@ -442,6 +469,81 @@ void printAsmProgram(FILE* fpointer, astNode* node, char* stringVariables[]){
             fprintf(fpointer, "\tidiv rbx\t\t\t\t; |\n");
             fprintf(fpointer, "\tpushq rdx\t\t\t\t; |\n");
             break;
+        case op_not:
+            fprintf(fpointer, "\tpopq rax\t\t\t\t; not\n");
+            fprintf(fpointer, "\tmov rbx, 0\t\t\t\t; |\n");
+            fprintf(fpointer, "\tnot rbx\t\t\t\t; |\n");
+            fprintf(fpointer, "\tshl rbx, 1\t\t\t\t; |\n");
+            fprintf(fpointer, "\tor rax, rbx\t\t\t\t; |\n");
+            fprintf(fpointer, "\tnot rax\t\t\t\t; |\n");
+            fprintf(fpointer, "\tpushq rax\t\t\t\t; |\n");
+            break;
+        case op_and:
+            fprintf(fpointer, "\tpopq rbx\t\t\t\t; and\n");
+            fprintf(fpointer, "\tpopq rax\t\t\t\t; |\n");
+            fprintf(fpointer, "\tand rax, rbx\t\t\t\t; |\n");
+            fprintf(fpointer, "\tpushq rax\t\t\t\t; |\n");
+            break;
+        case op_or:
+            fprintf(fpointer, "\tpopq rbx\t\t\t\t; or\n");
+            fprintf(fpointer, "\tpopq rax\t\t\t\t; |\n");
+            fprintf(fpointer, "\tor rax, rbx\t\t\t\t; |\n");
+            fprintf(fpointer, "\tpushq rax\t\t\t\t; |\n");
+            break;
+        case op_eq:
+            fprintf(fpointer, "\tpopq rbx\t\t\t\t; eq\n");
+            fprintf(fpointer, "\tpopq rax\t\t\t\t; |\n");
+            fprintf(fpointer, "\tcmp rax, rbx\t\t\t\t; |\n");
+            fprintf(fpointer, "\tmov rax, 0\t\t\t\t; |\n");
+            fprintf(fpointer, "\tmov rbx, 1\t\t\t\t; |\n");
+            fprintf(fpointer, "\tcmove rax, rbx\t\t\t\t; |\n");
+            fprintf(fpointer, "\tpushq rax\t\t\t\t; |\n");
+            break;
+        case op_neq:
+            fprintf(fpointer, "\tpopq rbx\t\t\t\t; neq\n");
+            fprintf(fpointer, "\tpopq rax\t\t\t\t; |\n");
+            fprintf(fpointer, "\tcmp rax, rbx\t\t\t\t; |\n");
+            fprintf(fpointer, "\tmov rax, 1\t\t\t\t; |\n");
+            fprintf(fpointer, "\tmov rbx, 0\t\t\t\t; |\n");
+            fprintf(fpointer, "\tcmove rax, rbx\t\t\t\t; |\n");
+            fprintf(fpointer, "\tpushq rax\t\t\t\t; |\n");
+            break;
+        case op_lt:
+            fprintf(fpointer, "\tpopq rbx\t\t\t\t; lt\n");
+            fprintf(fpointer, "\tpopq rax\t\t\t\t; |\n");
+            fprintf(fpointer, "\tcmp rax, rbx\t\t\t\t; |\n");
+            fprintf(fpointer, "\tmov rax, 0\t\t\t\t; |\n");
+            fprintf(fpointer, "\tmov rbx, 1\t\t\t\t; |\n");
+            fprintf(fpointer, "\tcmovl rax, rbx\t\t\t\t; |\n");
+            fprintf(fpointer, "\tpushq rax\t\t\t\t; |\n");
+            break;
+        case op_gt:
+            fprintf(fpointer, "\tpopq rbx\t\t\t\t; gt\n");
+            fprintf(fpointer, "\tpopq rax\t\t\t\t; |\n");
+            fprintf(fpointer, "\tcmp rax, rbx\t\t\t\t; |\n");
+            fprintf(fpointer, "\tmov rax, 0\t\t\t\t; |\n");
+            fprintf(fpointer, "\tmov rbx, 1\t\t\t\t; |\n");
+            fprintf(fpointer, "\tcmovg rax, rbx\t\t\t\t; |\n");
+            fprintf(fpointer, "\tpushq rax\t\t\t\t; |\n");
+            break;
+        case op_le:
+            fprintf(fpointer, "\tpopq rbx\t\t\t\t; le\n");
+            fprintf(fpointer, "\tpopq rax\t\t\t\t; |\n");
+            fprintf(fpointer, "\tcmp rax, rbx\t\t\t\t; |\n");
+            fprintf(fpointer, "\tmov rax, 0\t\t\t\t; |\n");
+            fprintf(fpointer, "\tmov rbx, 1\t\t\t\t; |\n");
+            fprintf(fpointer, "\tcmovle rax, rbx\t\t\t\t; |\n");
+            fprintf(fpointer, "\tpushq rax\t\t\t\t; |\n");
+            break;
+        case op_ge:
+            fprintf(fpointer, "\tpopq rbx\t\t\t\t; ge\n");
+            fprintf(fpointer, "\tpopq rax\t\t\t\t; |\n");
+            fprintf(fpointer, "\tcmp rax, rbx\t\t\t\t; |\n");
+            fprintf(fpointer, "\tmov rax, 0\t\t\t\t; |\n");
+            fprintf(fpointer, "\tmov rbx, 1\t\t\t\t; |\n");
+            fprintf(fpointer, "\tcmovge rax, rbx\t\t\t\t; |\n");
+            fprintf(fpointer, "\tpushq rax\t\t\t\t; |\n");
+            break;
         case op_parseint:
             fprintf(fpointer, "\tpopq rsi\t\t\t\t; parseint\n");
             fprintf(fpointer, "\tmov rdi, rsi\t\t\t\t; |\n");
@@ -469,7 +571,6 @@ void printAsmProgram(FILE* fpointer, astNode* node, char* stringVariables[]){
             fprintf(fpointer, "\tpushq rax\t\t\t\t; |\n");
             break;
         case op_inttostr:
-            // TODO this does not work
             fprintf(fpointer, "\tpopq rax\t\t\t\t; inttostr\n");
             fprintf(fpointer, "\tmov r8, rax\t\t\t\t; |\n");
             fprintf(fpointer, "\tmov rbx, 10\t\t\t\t; |\n");

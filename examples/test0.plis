@@ -1,4 +1,4 @@
 chain(
-    prints(inttostr(351837)),
+    putc(add(<(17, 13), '0')),
     putc('\n')
 )

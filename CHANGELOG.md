@@ -1,5 +1,27 @@
 # Changelog
 
+## Alpha 4.0 (2022-3-23)
+
+The logics update.  
+I am aware that syntax is very cursed.
+
+### New Operations:
+| operation              | usage                             | description   |
+| :--------------------: | :-------------------------------- | :------------ |
+| `!(a)`                 | !(bool:a) -> bool                 | !a            |
+| `&&(a, b)`             | &&(bool:a, bool:b) -> bool        | a && b        |
+| `||(a, b)`             | \|\|(bool:a, bool:b) -> bool      | a \|\| b      |
+| `==(a, b)`             | ==(bool:a, bool:b) -> bool        | a == b        |
+| `!=(a, b)`             | !=(bool:a, bool:b) -> bool        | a != b        |
+| `<(a, b)`              | <(bool:a, bool:b) -> bool         | a < b         |
+| `>(a, b)`              | >(bool:a, bool:b) -> bool         | a > b         |
+| `<=(a, b)`             | <=(bool:a, bool:b) -> bool        | a <= b        |
+| `>=(a, b)`             | >=(bool:a, bool:b) -> bool        | a >= b        |
+
+### Possible improvements:
+- [ ] strings do not support escaped and special characters
+- [ ] follow register purpose convention and rename labels
+
 ## Alpha 3.3 (2022-3-23)
 
 A few more binary operations were added to plis. This ends the math functions implementations for the time being.
