@@ -209,6 +209,9 @@ void insertASTNode(token tokenised[], int programCounter, astNode* branch){
             case op_ge:
                 assert(i < 3 && ">= only takes 2 arguments");
                 break;
+            case op_if:
+                assert(i < 4 && "if only takes 3 arguments");
+                break;
             case op_parseint:
                 assert(i < 2 && "parseint only takes 1 argument");
                 break;
@@ -304,7 +307,16 @@ char parseChar(char* str){
     }
 }
 
-void printAsmProgram(FILE* fpointer, astNode* node, char* stringVariables[]){
+void printAsmProgram(FILE* fpointer, astNode* node, char* stringVariables[], bool weare_in_ifstatement, int argindex, int statement_depth){
+    if (weare_in_ifstatement){
+        if (argindex == 1){
+            fprintf(fpointer, "; if block start\n");
+        } else if (argindex == 2){
+            fprintf(fpointer, "\tjmp endiflabel%d\t\t\t\t; jump to endif\n", statement_depth);
+            fprintf(fpointer, "elselabel%d:\t\t\t\t; else block start\n", statement_depth);
+        }
+    }
+    
     if (node->opnum == not_op){
         if (isNumber(node->info)){
             fprintf(fpointer, "\tpushq %s\t\t\t\t; params push\n", node->info);
@@ -321,12 +333,27 @@ void printAsmProgram(FILE* fpointer, astNode* node, char* stringVariables[]){
         return;
     }
 
+
+    if (node->opnum == op_if){
+        weare_in_ifstatement = true;
+        statement_depth++;
+    } else {
+        weare_in_ifstatement = false;
+    }
+
     for (int i = 0; i < MAX_ARGUMENT_COUNT; i++){
         if (!node->child[i]){
             break;
         }
-        printAsmProgram(fpointer, node->child[i], stringVariables);
+        printAsmProgram(fpointer, node->child[i], stringVariables, weare_in_ifstatement, i, statement_depth);
+
+        if (weare_in_ifstatement && i == 0){
+            fprintf(fpointer, "\tpopq rax\t\t\t\t; if jump incoming\n"); // if ends here
+            fprintf(fpointer, "\tcmp rax, 0\t\t\t\t; |\n");
+            fprintf(fpointer, "\tje elselabel%d\t\t\t\t; |\n", statement_depth);
+        }
     }
+
     switch (node->opnum){
         case op_nop:
             fprintf(fpointer, "\tmov rax, rax\t\t\t\t; nop\n");
@@ -544,6 +571,9 @@ void printAsmProgram(FILE* fpointer, astNode* node, char* stringVariables[]){
             fprintf(fpointer, "\tcmovge rax, rbx\t\t\t\t; |\n");
             fprintf(fpointer, "\tpushq rax\t\t\t\t; |\n");
             break;
+        case op_if:
+            fprintf(fpointer, "endiflabel%d:\t\t\t\t; if statement end\n", statement_depth);
+            break;
         case op_parseint:
             fprintf(fpointer, "\tpopq rsi\t\t\t\t; parseint\n");
             fprintf(fpointer, "\tmov rdi, rsi\t\t\t\t; |\n");
@@ -606,6 +636,7 @@ void printAsmProgram(FILE* fpointer, astNode* node, char* stringVariables[]){
             assert(0 && "not recognised operation");
             break;
     }
+    
 }
 
 void printAsmExit(FILE* fpointer){
@@ -717,7 +748,7 @@ int main(int argc, char const *argv[]) {
     }
     FILE* assemblyOutFile = fopen(assemblyOutFilename, "w");
     printAsmHead(assemblyOutFile);
-    printAsmProgram(assemblyOutFile, ast, stringVariables);
+    printAsmProgram(assemblyOutFile, ast, stringVariables, false, 0, 0);
     printAsmExit(assemblyOutFile);
     printAsmFooter(assemblyOutFile, stringVariables);
     fclose(assemblyOutFile);

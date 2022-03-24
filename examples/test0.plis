@@ -1,4 +1,7 @@
 chain(
-    putc(add(<(17, 13), '0')),
+    if(if(0, 1, 0),
+        prints("first"),
+        prints("second")
+    ),
     putc('\n')
 )
