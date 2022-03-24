@@ -1,0 +1,4 @@
+chain(
+    prints(inttostr(add(mul(10, sub(getc(), 48)), sub(getc(), 48)))),
+    putc('\n')
+)

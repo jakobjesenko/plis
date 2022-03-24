@@ -1,5 +1,22 @@
 # Changelog
 
+## Alpha 4.1 (2022-3-24)
+
+How do we get multi character input? [that's how](examples/math2.plis).  
+Also [first actual program](examples/statments0.plis) that does anything.
+
+### New Operations:
+| operation                   | usage                                         | description   |
+| :-------------------------: | :-------------------------------------------- | :------------ |
+| `if(condition, opt1, opt2)` | if(bool:condition, any:opt1, any:opt2) -> any[^a4.1-1] | guides flow of the program in a way indicated by the condition |
+
+### Possible improvements:
+- [ ] strings do not support escaped and special characters
+- [ ] follow register purpose convention and rename labels
+- [ ] inttostr does not work for 1 digit numbers
+
+[^a4.1-1]: the any type in this statement includes none, but has to match for all of them
+
 ## Alpha 4.0 (2022-3-23)
 
 The logics update.  

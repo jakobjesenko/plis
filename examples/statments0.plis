@@ -1,0 +1,10 @@
+chain(
+    prints("Please enter your age: "),
+    chain(
+        if(>=(add(mul(10, sub(getc(), 48)), sub(getc(), 48)), 18),
+            prints("Well, come on in!"),
+            prints("You are not quite old enough.")
+        ),
+        putc('\n')
+    )
+)
