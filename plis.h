@@ -9,10 +9,10 @@
 #include <ctype.h>
 
 // compiler constants
-#define BRACKET_STACK_DEPTH 128
+#define BRACKET_STACK_DEPTH 512
 #define TOKEN_ARRAY_LENGTH 1024
 #define MAX_WORD_LENGTH 32
-#define MAX_ARGUMENT_COUNT 4
+#define MAX_ARGUMENT_COUNT 6
 #define MAX_STRING_COUNT 128
 
 // program constants
@@ -128,5 +128,7 @@ static bool buffered_write = true;
 static int putc_calls_count = 0;
 static int string_variable_count = 0;
 static int empty_number_count = 0;
+static int global_statement_depth = 0;
+static int global_loop_depth = 0;
 
 #endif

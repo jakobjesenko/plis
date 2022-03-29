@@ -1,34 +1,75 @@
 chain(
     chain(
-        memset(0, 0),
-        while(<(memget(0), 20),
+        chain(
+            memset(0, 9),
             chain(
-                memset(add(memget(0), 4), mod(memget(0), 2)),
-                memset(0, add(memget(0), 1))
+                memset(1, 20),
+                chain(
+                    memset(2, add(memget(0), memget(1))),
+                    chain(
+                        memset(3, 0),
+                        chain(
+                            memset(4, 0),
+                            memset(5, 0)
+                        )
+                    )
+                )
             )
+        ),
+        chain(
+            memset(0, 9),
+            nop()
         )
     ),
     chain(
-        memset(0, 0),
-        while(<(memget(0), 10),
+        chain(
+            while(<(memget(3), memget(1)),
+                chain(
+                    memset(add(memget(0), memget(3)), 0),
+                    memset(3, add(memget(3), 1))
+                )
+            ),
+            memset(sub(add(memget(0), memget(1)), 1), 1)
+        ),
+        while(<(memget(4), 10),
             chain(
                 chain(
-                    memset(1, 4),
+                    memset(4, add(memget(4), 1)),
                     chain(
-                        while(<(memget(1), 24)
+                        memset(3, 1),
+                        while(<(memget(3), sub(memget(1), 1)),
                             chain(
-                                if(==(memget(memget(1)), 1),
+                                chain(
+                                    nop(),
+                                    nop()
+                                ),
+                                chain(
+                                    if(memget(8),
+                                        memset(add(memget(0), memget(3)), 1),
+                                        memset(add(memget(0), memget(3)), 0)
+                                    )
+                                    memset(3, add(memget(3), 1))
+                                )
+                            )
+                        )
+                    )
+                ),
+                chain(
+                    chain(
+                        memset(3, 0),
+                        while(<(memget(3), memget(1)),
+                            chain(
+                                if(==(memget(add(memget(0), memget(3))), 1),
                                     prints("#"),
                                     prints(" ")
                                 ),
-                                memset(1, add(memget(1), 1))
+                                memset(3, add(memget(3), 1))
                             )
-                        ),
-                        putc('\n')
-                    )
-                ),
-                memset(0, add(memget(0), 1))
-            )            
+                        )
+                    ),
+                    putc('\n')
+                )
+            )
         )
     )
 )
