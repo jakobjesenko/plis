@@ -8,13 +8,17 @@
 #include <stdbool.h>
 #include <ctype.h>
 
+// compiler constants
 #define BRACKET_STACK_DEPTH 128
 #define TOKEN_ARRAY_LENGTH 256
 #define MAX_WORD_LENGTH 32
 #define MAX_ARGUMENT_COUNT 8
-#define WRITE_BUFFER_LENGTH 128
 #define MAX_STRING_COUNT 128
+
+// program constants
+#define WRITE_BUFFER_LENGTH 128
 #define MAX_ALLOCATED_NUMBERS 64
+#define ALLOCATED_GP_MEMORY 256
 
 typedef enum {
     op_nop,
@@ -46,6 +50,9 @@ typedef enum {
     op_le,
     op_ge,
     op_if,
+    op_while,
+    op_memset,
+    op_memget,
     op_parseint,
     op_inttostr,
     op_testingop,
@@ -85,6 +92,9 @@ char* keywords[] = {
     "<=",
     ">=",
     "if",
+    "while",
+    "memset",
+    "memget",
     "parseint",
     "inttostr",
     "testingop",

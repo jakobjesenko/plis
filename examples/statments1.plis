@@ -1,0 +1,10 @@
+chain(
+    chain(
+        memset(0, add(mul(sub(getc(), 48), 10), sub(getc(), 48))),
+        if(>=(memget(0), 18),
+            prints("Well, come on in!"),
+            prints("You are not quite old enough.")
+        ),
+    )
+    putc('\n')
+)

@@ -1,7 +1,4 @@
 chain(
-    if(if(0, 1, 0),
-        prints("first"),
-        prints("second")
-    ),
+    prints(inttostr(0)),
     putc('\n')
 )

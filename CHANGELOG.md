@@ -1,5 +1,25 @@
 # Changelog
 
+## Alpha 4.2
+
+Memory is now available for use, that means an array of int variables, that can be used without passing them to functions.  
+[improved first actual program](examples/statments1.plis).  
+[easy programming exercise](examples/statments3.plis).  
+While loop is now a thing, making plis a proper programming language.
+
+### New Operations:
+| operation                | usage                              | description   |
+| :----------------------: | :--------------------------------- | :------------ |
+| `memset(index, val)`     | memset(int:index, int\|char:val) -> none | set 8-byte aligned memory array at index to value |
+| `memget(index)`          | memget(int:index) -> int           | get value from memory at index |
+| `while(condition, code)` | while(bool:condition, none:code) -> none | repeat code until contition is false; example: [counting](examples/statments2.plis) |
+
+### Possible improvements:
+- [ ] strings do not support escaped and special characters
+- [ ] follow register purpose convention and rename labels
+- [x] inttostr does not work for 1 digit numbers
+
+
 ## Alpha 4.1 (2022-3-24)
 
 How do we get multi character input? [that's how](examples/math2.plis).  

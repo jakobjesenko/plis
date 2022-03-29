@@ -212,6 +212,15 @@ void insertASTNode(token tokenised[], int programCounter, astNode* branch){
             case op_if:
                 assert(i < 4 && "if only takes 3 arguments");
                 break;
+            case op_while:
+                assert(i < 3 && "while only takes 2 arguments");
+                break;
+            case op_memset:
+                assert(i < 3 && "memset only takes 2 arguments");
+                break;
+            case op_memget:
+                assert(i < 2 && "memget only takes 1 arguments");
+                break;
             case op_parseint:
                 assert(i < 2 && "parseint only takes 1 argument");
                 break;
@@ -307,7 +316,8 @@ char parseChar(char* str){
     }
 }
 
-void printAsmProgram(FILE* fpointer, astNode* node, char* stringVariables[], bool weare_in_ifstatement, int argindex, int statement_depth){
+void printAsmProgram(FILE* fpointer, astNode* node, char* stringVariables[], bool weare_in_ifstatement,
+                        bool weare_in_whileloop, int argindex, int statement_depth, int loop_depth){
     if (weare_in_ifstatement){
         if (argindex == 1){
             fprintf(fpointer, "; if block start\n");
@@ -315,6 +325,9 @@ void printAsmProgram(FILE* fpointer, astNode* node, char* stringVariables[], boo
             fprintf(fpointer, "\tjmp endiflabel%d\t\t\t\t; jump to endif\n", statement_depth);
             fprintf(fpointer, "elselabel%d:\t\t\t\t; else block start\n", statement_depth);
         }
+    }
+    if (weare_in_whileloop && argindex == 1){
+        fprintf(fpointer, "; while code block start\n");
     }
     
     if (node->opnum == not_op){
@@ -340,17 +353,29 @@ void printAsmProgram(FILE* fpointer, astNode* node, char* stringVariables[], boo
     } else {
         weare_in_ifstatement = false;
     }
+    if (node->opnum == op_while){
+        weare_in_whileloop = true;
+        loop_depth++;
+        fprintf(fpointer, "whilelooplabel%d:\t\t\t\t; while condition\n", loop_depth);
+    } else {
+        weare_in_whileloop = false;
+    }
 
     for (int i = 0; i < MAX_ARGUMENT_COUNT; i++){
         if (!node->child[i]){
             break;
         }
-        printAsmProgram(fpointer, node->child[i], stringVariables, weare_in_ifstatement, i, statement_depth);
+        printAsmProgram(fpointer, node->child[i], stringVariables, weare_in_ifstatement, weare_in_whileloop, i, statement_depth, loop_depth);
 
         if (weare_in_ifstatement && i == 0){
-            fprintf(fpointer, "\tpopq rax\t\t\t\t; if jump incoming\n"); // if ends here
+            fprintf(fpointer, "\tpopq rax\t\t\t\t; if jump\n"); // if ends here
             fprintf(fpointer, "\tcmp rax, 0\t\t\t\t; |\n");
             fprintf(fpointer, "\tje elselabel%d\t\t\t\t; |\n", statement_depth);
+        }
+        if (weare_in_whileloop && i == 0){
+            fprintf(fpointer, "\tpopq rax\t\t\t\t; while jump\n");
+            fprintf(fpointer, "\tcmp rax, 0\t\t\t\t; |\n");
+            fprintf(fpointer, "\tje endwhilelabel%d\t\t\t\t; |\n", loop_depth);
         }
     }
 
@@ -377,7 +402,7 @@ void printAsmProgram(FILE* fpointer, astNode* node, char* stringVariables[], boo
                 fprintf(fpointer, "\tlea rsi, [writebuffer]\t\t\t\t; |\n");
                 fprintf(fpointer, "\tmov rdx, [bufferpointer]\t\t\t\t; |\n");
                 fprintf(fpointer, "\tsyscall\t\t\t\t; |\n");
-                fprintf(fpointer, "\tmov [bufferpointer], 0\t\t\t\t; |\n"); // reset writebuffer
+                fprintf(fpointer, "\tmov qword [bufferpointer], 0\t\t\t\t; |\n"); // reset writebuffer
                 fprintf(fpointer, "putlabel%d:\t\t\t\t; |\n", putc_calls_count++);
             } else {
                 fprintf(fpointer, "\tmov rax, 1\t\t\t\t; putc\n");
@@ -404,7 +429,7 @@ void printAsmProgram(FILE* fpointer, astNode* node, char* stringVariables[], boo
             fprintf(fpointer, "\tlea rsi, [writebuffer]\t\t\t\t; |\n");
             fprintf(fpointer, "\tmov rdx, [bufferpointer]\t\t\t\t; |\n");
             fprintf(fpointer, "\tsyscall\t\t\t\t; |\n");
-            fprintf(fpointer, "\tmov [bufferpointer], 0\t\t\t\t; |\n"); // reset writebuffer
+            fprintf(fpointer, "\tmov qword [bufferpointer], 0\t\t\t\t; |\n"); // reset writebuffer
             fprintf(fpointer, "putlabel%d:\t\t\t\t; |\n", putc_calls_count++);
             fprintf(fpointer, "\tmov rax, 1\t\t\t\t; \n");
             fprintf(fpointer, "\tmov rdi, 1\t\t\t\t; |\n");
@@ -574,6 +599,26 @@ void printAsmProgram(FILE* fpointer, astNode* node, char* stringVariables[], boo
         case op_if:
             fprintf(fpointer, "endiflabel%d:\t\t\t\t; if statement end\n", statement_depth);
             break;
+        case op_while:
+            fprintf(fpointer, "\tjmp whilelooplabel%d\t\t\t\t; while loop end\n", loop_depth);
+            fprintf(fpointer, "endwhilelabel%d:\t\t\t\t; |\n", loop_depth);
+            break;
+        case op_memset:
+            fprintf(fpointer, "\tpopq rax\t\t\t\t; memset\n");
+            fprintf(fpointer, "\tpopq rcx\t\t\t\t; |\n");
+            fprintf(fpointer, "\tshl rcx, 3\t\t\t\t; |\n");
+            fprintf(fpointer, "\tlea rbx, [gpmemory]\t\t\t\t; |\n");
+            fprintf(fpointer, "\tadd rbx, rcx\t\t\t\t; |\n");
+            fprintf(fpointer, "\tmov [rbx], rax\t\t\t\t; |\n");
+            break;
+        case op_memget:
+            fprintf(fpointer, "\tpopq rcx\t\t\t\t; memget\n");
+            fprintf(fpointer, "\tshl rcx, 3\t\t\t\t; |\n");
+            fprintf(fpointer, "\tlea rbx, [gpmemory]\t\t\t\t; |\n");
+            fprintf(fpointer, "\tadd rbx, rcx\t\t\t\t; |\n");
+            fprintf(fpointer, "\tmov rax, [rbx]\t\t\t\t; |\n");
+            fprintf(fpointer, "\tpushq rax\t\t\t\t; |\n");
+            break;
         case op_parseint:
             fprintf(fpointer, "\tpopq rsi\t\t\t\t; parseint\n");
             fprintf(fpointer, "\tmov rdi, rsi\t\t\t\t; |\n");
@@ -612,7 +657,6 @@ void printAsmProgram(FILE* fpointer, astNode* node, char* stringVariables[], boo
             fprintf(fpointer, "\tcmp rax, 0\t\t\t\t; |\n");
             fprintf(fpointer, "\tjnz putlabel%d\t\t\t\t; |\n", putc_calls_count++);
             // rcx je log(rax)
-            fprintf(fpointer, "\tsub rcx, 1\t\t\t\t; |\n");
             fprintf(fpointer, "\tmov rax, r8\t\t\t\t; |\n");
             fprintf(fpointer, "\tlea rsi, [emptynumber%d]\t\t\t\t; |\n", empty_number_count);
             fprintf(fpointer, "\tadd rsi, rcx\t\t\t\t; |\n");
@@ -623,11 +667,8 @@ void printAsmProgram(FILE* fpointer, astNode* node, char* stringVariables[], boo
             fprintf(fpointer, "\tmov [rsi], dl\t\t\t\t; |\n");
             fprintf(fpointer, "\tsub rsi, 1\t\t\t\t; |\n");
             fprintf(fpointer, "\tsub rcx, 1\t\t\t\t; |\n");
-            fprintf(fpointer, "\tjnz putlabel%d\t\t\t\t; |\n", putc_calls_count++);
-            fprintf(fpointer, "\tmov rdx, 0\t\t\t\t; |\n");
-            fprintf(fpointer, "\tidiv rbx\t\t\t\t; |\n");
-            fprintf(fpointer, "\tadd rdx, 48\t\t\t\t; |\n");
-            fprintf(fpointer, "\tmov [rsi], dl\t\t\t\t; |\n");
+            fprintf(fpointer, "\tcmp rcx, 0\t\t\t\t; |\n");
+            fprintf(fpointer, "\tjg putlabel%d\t\t\t\t; |\n", putc_calls_count++);
             fprintf(fpointer, "\tpushq emptynumber%d\t\t\t\t; |\n", empty_number_count++);
             break;
         case op_testingop:
@@ -655,6 +696,7 @@ void printAsmFooter(FILE* fpointer, char* stringVariables[]){
     for (int i  = 0; i < empty_number_count; i++){
         fprintf(fpointer, "emptynumber%d db 23 dup (0)\n", i);
     }
+    fprintf(fpointer, "gpmemory rq %d\n", ALLOCATED_GP_MEMORY);
 }
 
 int main(int argc, char const *argv[]) {
@@ -748,7 +790,7 @@ int main(int argc, char const *argv[]) {
     }
     FILE* assemblyOutFile = fopen(assemblyOutFilename, "w");
     printAsmHead(assemblyOutFile);
-    printAsmProgram(assemblyOutFile, ast, stringVariables, false, 0, 0);
+    printAsmProgram(assemblyOutFile, ast, stringVariables, false, false, 0, 0, 0);
     printAsmExit(assemblyOutFile);
     printAsmFooter(assemblyOutFile, stringVariables);
     fclose(assemblyOutFile);

@@ -1,0 +1,15 @@
+chain(
+    memset(0, 1),
+    while(<=(memget(0), 10),
+        chain(
+            if(!=(mod(memget(0), 3), 0),
+                prints(inttostr(memget(0))),
+                prints("bum")
+            ),
+            chain(
+                putc('\n'),
+                memset(0, add(memget(0), 1))
+            )
+        )
+    )
+)

@@ -1,0 +1,12 @@
+chain(
+    memset(0, 0),
+    while(<(memget(0), 10),
+        chain(
+            chain(
+                putc(add(memget(0), 48)),
+                putc('\n')
+            ),
+            memset(0, add(memget(0), 1))
+        )
+    )
+)
