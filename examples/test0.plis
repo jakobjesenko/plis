@@ -1,4 +1,34 @@
 chain(
-    prints(inttostr(0)),
-    putc('\n')
+    chain(
+        memset(0, 0),
+        while(<(memget(0), 20),
+            chain(
+                memset(add(memget(0), 4), mod(memget(0), 2)),
+                memset(0, add(memget(0), 1))
+            )
+        )
+    ),
+    chain(
+        memset(0, 0),
+        while(<(memget(0), 10),
+            chain(
+                chain(
+                    memset(1, 4),
+                    chain(
+                        while(<(memget(1), 24)
+                            chain(
+                                if(==(memget(memget(1)), 1),
+                                    prints("#"),
+                                    prints(" ")
+                                ),
+                                memset(1, add(memget(1), 1))
+                            )
+                        ),
+                        putc('\n')
+                    )
+                ),
+                memset(0, add(memget(0), 1))
+            )            
+        )
+    )
 )

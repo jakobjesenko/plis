@@ -10,9 +10,9 @@
 
 // compiler constants
 #define BRACKET_STACK_DEPTH 128
-#define TOKEN_ARRAY_LENGTH 256
+#define TOKEN_ARRAY_LENGTH 1024
 #define MAX_WORD_LENGTH 32
-#define MAX_ARGUMENT_COUNT 8
+#define MAX_ARGUMENT_COUNT 4
 #define MAX_STRING_COUNT 128
 
 // program constants

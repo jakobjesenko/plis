@@ -356,7 +356,7 @@ void printAsmProgram(FILE* fpointer, astNode* node, char* stringVariables[], boo
     if (node->opnum == op_while){
         weare_in_whileloop = true;
         loop_depth++;
-        fprintf(fpointer, "whilelooplabel%d:\t\t\t\t; while condition\n", loop_depth);
+        fprintf(fpointer, "whilelooplabel%d:\t\t\t\t; while condition\n", loop_depth + argindex);
     } else {
         weare_in_whileloop = false;
     }
@@ -375,7 +375,7 @@ void printAsmProgram(FILE* fpointer, astNode* node, char* stringVariables[], boo
         if (weare_in_whileloop && i == 0){
             fprintf(fpointer, "\tpopq rax\t\t\t\t; while jump\n");
             fprintf(fpointer, "\tcmp rax, 0\t\t\t\t; |\n");
-            fprintf(fpointer, "\tje endwhilelabel%d\t\t\t\t; |\n", loop_depth);
+            fprintf(fpointer, "\tje endwhilelabel%d\t\t\t\t; |\n", loop_depth + argindex);
         }
     }
 
@@ -600,8 +600,8 @@ void printAsmProgram(FILE* fpointer, astNode* node, char* stringVariables[], boo
             fprintf(fpointer, "endiflabel%d:\t\t\t\t; if statement end\n", statement_depth);
             break;
         case op_while:
-            fprintf(fpointer, "\tjmp whilelooplabel%d\t\t\t\t; while loop end\n", loop_depth);
-            fprintf(fpointer, "endwhilelabel%d:\t\t\t\t; |\n", loop_depth);
+            fprintf(fpointer, "\tjmp whilelooplabel%d\t\t\t\t; while loop end\n", loop_depth + argindex);
+            fprintf(fpointer, "endwhilelabel%d:\t\t\t\t; |\n", loop_depth + argindex);
             break;
         case op_memset:
             fprintf(fpointer, "\tpopq rax\t\t\t\t; memset\n");
