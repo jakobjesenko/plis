@@ -762,7 +762,7 @@ int main(int argc, char const *argv[]) {
     }
 
     if (flags.help){
-        printf("help needs implemented\n\tflags:[-a, -h, -n, -s, -t]\n");
+        system("cat help.txt");
         return 0;
     }
 

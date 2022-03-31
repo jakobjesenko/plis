@@ -1,0 +1,66 @@
+chain(
+    chain(
+        chain(
+            chain(chain(memset(0, 9), memset(1, 40)), chain(memset(2, 0), memset(3, 0))),
+            chain(chain(memset(4, 0), memset(5, 0)), chain(memset(6, 0), memset(7, 0)))
+        ),
+        chain(
+            memset(sub(add(memget(0), memget(1)), 1), 1),
+            memset(sub(add(memget(0), mul(2, memget(1))), 1), 1)
+        )
+    ),
+    
+    
+    chain(
+        chain(memset(2, 0), while(<(memget(2), 40),
+            chain(
+                chain(
+
+
+                    chain(memset(3, 1), while(<(memget(3), sub(memget(1), 1)),
+                        chain(
+                            chain(
+                                chain(
+                                    chain(
+                                        memset(6, add(memget(3), add(memget(0), mul(mod(memget(2), 2), memget(1))))),
+                                        memset(7, add(memget(3), add(memget(0), mul(mod(add(memget(2), 1), 2), memget(1)))))
+                                    ),
+                                    nop()
+                                ),
+
+
+                                chain(
+                                    if(&&(==(1, memget(sub(memget(6), 1))), &&(==(1, memget(memget(6))), ==(1, memget(add(memget(6), 1))))), memset(8, 0),
+                                    if(&&(==(1, memget(sub(memget(6), 1))), &&(==(1, memget(memget(6))), ==(0, memget(add(memget(6), 1))))), memset(8, 1),
+                                    if(&&(==(1, memget(sub(memget(6), 1))), &&(==(0, memget(memget(6))), ==(1, memget(add(memget(6), 1))))), memset(8, 1),
+                                    if(&&(==(1, memget(sub(memget(6), 1))), &&(==(0, memget(memget(6))), ==(0, memget(add(memget(6), 1))))), memset(8, 0),
+                                    if(&&(==(0, memget(sub(memget(6), 1))), &&(==(1, memget(memget(6))), ==(1, memget(add(memget(6), 1))))), memset(8, 1),
+                                    if(&&(==(0, memget(sub(memget(6), 1))), &&(==(1, memget(memget(6))), ==(0, memget(add(memget(6), 1))))), memset(8, 1),
+                                    if(&&(==(0, memget(sub(memget(6), 1))), &&(==(0, memget(memget(6))), ==(1, memget(add(memget(6), 1))))), memset(8, 1),
+                                    if(&&(==(0, memget(sub(memget(6), 1))), &&(==(0, memget(memget(6))), ==(0, memget(add(memget(6), 1))))), memset(8, 0),
+                                    nop())))))))),
+                                    memset(memget(7), memget(8))
+                                )
+
+                                
+                            )
+                            memset(3, add(memget(3), 1))
+                        )
+                    )),
+
+
+                    chain(chain(memset(3, 0), while(<(memget(3), memget(1)),
+                        chain(
+                            putc(add('0', memget(add(add(memget(0), mul(mod(memget(2), 2), memget(1))), memget(3))))),
+                            memset(3, add(memget(3), 1))
+                        )
+                    )), putc('\n'))
+
+
+                ),
+                memset(2, add(memget(2), 1))
+            )
+        )),
+        nop()
+    ),
+)

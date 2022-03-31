@@ -1,5 +1,15 @@
 # Changelog
 
+## Beta 1.0 (2022-3-31)
+
+With the implementation of [rule 110](examples/rule110_0.plis) in plis it is now confirmed that plis is turing complete and therefore a proper programming language.  
+No new functionallity was added since last version.  
+Help option is now a little more helpful.
+
+### Possible improvements:
+- [ ] strings do not support escaped and special characters
+- [ ] follow register purpose convention and rename labels
+
 ## Alpha 4.2 (2022-3-31)
 
 Memory is now available for use, that means an array of int variables, that can be used without passing them to functions.  
@@ -47,7 +57,7 @@ I am aware that syntax is very cursed.
 | :--------------------: | :-------------------------------- | :------------ |
 | `!(a)`                 | !(bool:a) -> bool                 | !a            |
 | `&&(a, b)`             | &&(bool:a, bool:b) -> bool        | a && b        |
-| `||(a, b)`             | \|\|(bool:a, bool:b) -> bool      | a \|\| b      |
+| `\|\|(a, b)`           | \|\|(bool:a, bool:b) -> bool      | a \|\| b      |
 | `==(a, b)`             | ==(bool:a, bool:b) -> bool        | a == b        |
 | `!=(a, b)`             | !=(bool:a, bool:b) -> bool        | a != b        |
 | `<(a, b)`              | <(bool:a, bool:b) -> bool         | a < b         |

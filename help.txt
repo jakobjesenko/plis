@@ -1,0 +1,8 @@
+Usage: plis <FILE> [OPTIONS]
+Compile plis code to an elf executable file.
+
+  -a <file>         generate AST representation of the program
+  -h                print this help message
+  -n                disable write syscall buffering for putc
+  -s <file>         generate assembly for the program
+  -t <file>         print out tikenised program
