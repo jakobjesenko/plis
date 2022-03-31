@@ -1,11 +1,11 @@
 # Changelog
 
-## Alpha 4.2
+## Alpha 4.2 (2022-3-31)
 
 Memory is now available for use, that means an array of int variables, that can be used without passing them to functions.  
 [improved first actual program](examples/statments1.plis).  
 [easy programming exercise](examples/statments3.plis).  
-While loop is now a thing, making plis a proper programming language.
+While loop is now a thing, likely making plis a proper programming language.
 
 ### New Operations:
 | operation                | usage                              | description   |
