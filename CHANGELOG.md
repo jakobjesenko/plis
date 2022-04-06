@@ -1,9 +1,10 @@
 # Changelog
 
-## Beta 1.1
+## Beta 1.1 (2022-4-6)
 
 Now you can name output binary, when compiling.  
-Fixed parseint that has been broken for an unknown time.
+Fixed parseint that has been broken for an unknown time.  
+Finally programs can be longer than 1 line. ([example](examples/hello2.plis))
 
 ### New Operations:
 | operation                | usage                              | description   |

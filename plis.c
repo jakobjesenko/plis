@@ -15,9 +15,7 @@ int lex(char* codeFileName, token tokenised[]){
     bool insideString = false;
 
     while ((c = fgetc(f)) != EOF){
-        if (c == '\'' && insideChar){
-            insideChar = false;
-        }
+        insideChar = (c == '\'') != insideChar;
         insideString = (c == '\"') != insideString;
         if (insideChar || insideString){
             goto skipstuff;

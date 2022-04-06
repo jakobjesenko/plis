@@ -1,0 +1,24 @@
+memset(0, 2)
+memset(1, 15)
+
+memset(2, 'H')
+memset(3, 'e')
+memset(4, 'l')
+memset(5, 'l')
+memset(6, 'o')
+memset(7, ',')
+memset(8, ' ')
+memset(9, 'W')
+memset(10, 'o')
+memset(11, 'r')
+memset(12, 'l')
+memset(13, 'd')
+memset(14, '!')
+memset(15, '\n')
+
+while(<=(memget(0), memget(1)),
+    chain(
+        putc(memget(memget(0))),
+        memset(0, add(memget(0), 1))
+    )
+)
