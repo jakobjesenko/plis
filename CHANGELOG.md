@@ -1,5 +1,20 @@
 # Changelog
 
+## Beta 1.1
+
+Now you can name output binary, when compiling.  
+Fixed parseint that has been broken for an unknown time.
+
+### New Operations:
+| operation                | usage                              | description   |
+| :----------------------: | :--------------------------------- | :------------ |
+| `argc()`                 | argc() -> int                      | return number of arguments passed to the program |
+| `argv(n)`                | argv(int:n) -> str                 | return n-th argument passed to the program |
+
+### Possible improvements:
+- [ ] strings do not support escaped and special characters
+- [ ] follow register purpose convention and rename labels
+
 ## Beta 1.0 (2022-3-31)
 
 With the implementation of [rule 110](examples/rule110_0.plis) in plis it is now confirmed that plis is turing complete and therefore a proper programming language.  

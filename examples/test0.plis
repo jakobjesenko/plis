@@ -1,1 +1,7 @@
-nop()
+chain(
+    memset(0, if(>(argc(), 1), parseint(argv(1)), 5)),
+    chain(
+        prints(inttostr(memget(0)))
+        putc('\n')
+    )
+)

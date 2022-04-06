@@ -1,4 +1,4 @@
-Usage: plis <FILE> [OPTIONS]
+Usage: plis <FILE> [OUTPUT] [OPTIONS]
 Compile plis code to an elf executable file.
 
   -a <file>         generate AST representation of the program

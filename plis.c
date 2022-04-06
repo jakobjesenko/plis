@@ -227,6 +227,11 @@ void insertASTNode(token tokenised[], int programCounter, astNode* branch){
             case op_inttostr:
                 assert(i < 2 && "inttostr only takes 1 argument");
                 break;
+            case op_argc:
+                break;
+            case op_argv:
+                assert(i < 2 && "argv only takes 1 argument");
+                break;
             case op_testingop:
                 break;
             default:
@@ -275,6 +280,7 @@ void printAsmHead(FILE* fpointer){
     fprintf(fpointer, "segment readable executable\n");
     fprintf(fpointer, "entry start\n");
     fprintf(fpointer, "\nstart:\n");
+    fprintf(fpointer, "\tmov rbp, rsp\t\t\t\t; set stack base\n");
 }
 
 bool isNumber(char* x){
@@ -624,27 +630,22 @@ void printAsmProgram(FILE* fpointer, astNode* node, char* stringVariables[], boo
         case op_parseint:
             fprintf(fpointer, "\tpopq rsi\t\t\t\t; parseint\n");
             fprintf(fpointer, "\tmov rdi, rsi\t\t\t\t; |\n");
-            fprintf(fpointer, "putlabel%d:\t\t\t\t; |\n", putc_calls_count);
+            fprintf(fpointer, "countforward%d:\t\t\t\t; |\n", putc_calls_count);
             fprintf(fpointer, "\tadd rdi, 1\t\t\t\t; |\n");
             fprintf(fpointer, "\tcmp byte [rdi], 0\t\t\t\t; |\n");
-            fprintf(fpointer, "\tjne putlabel%d\t\t\t\t; |\n", putc_calls_count++);
+            fprintf(fpointer, "\tjne countforward%d\t\t\t\t; |\n", putc_calls_count++);
             fprintf(fpointer, "\tmov rax, 0\t\t\t\t; |\n");
-            fprintf(fpointer, "\tmov rdx, 0\t\t\t\t; |\n"); // exponent
-            fprintf(fpointer, "putlabel%d:\t\t\t\t; |\n", putc_calls_count);
-            fprintf(fpointer, "\tsub rdi, 1\t\t\t\t; |\n");
-            fprintf(fpointer, "\tmov rbx, [rdi]\t\t\t\t; |\n");
-            fprintf(fpointer, "\tsub rbx, 48\t\t\t\t; |\n");
-            fprintf(fpointer, "explabel%d:\t\t\t\t; |\n", putc_calls_count);
-            fprintf(fpointer, "\tcmp rdx, 0\t\t\t\t; |\n");
-            fprintf(fpointer, "\tje expelabel%d\t\t\t\t; |\n", putc_calls_count);
-            fprintf(fpointer, "\timul rbx, 10\t\t\t\t; |\n");
-            fprintf(fpointer, "\tsub rdx, 1\t\t\t\t; |\n");
-            fprintf(fpointer, "\tjnz explabel%d\t\t\t\t; |\n", putc_calls_count);
-            fprintf(fpointer, "expelabel%d:\t\t\t\t; |\n", putc_calls_count);
-            fprintf(fpointer, "\tadd rax, rbx\t\t\t\t; |\n");
-            fprintf(fpointer, "\tadd rdx, 1\t\t\t\t; |\n");
+            fprintf(fpointer, "\tmov rbx, 10\t\t\t\t; |\n");
+            fprintf(fpointer, "calcnumber%d:\t\t\t\t; |\n", putc_calls_count);
+            fprintf(fpointer, "\tmov dl, [rsi]\t\t\t\t; |\n");
+            fprintf(fpointer, "\tsub dl, 48\t\t\t\t; |\n");
+            fprintf(fpointer, "\tadd rax, rdx\t\t\t\t; |\n");
+            fprintf(fpointer, "\tmul rbx\t\t\t\t; |\n");
+            fprintf(fpointer, "\tadd rsi, 1\t\t\t\t; |\n");
             fprintf(fpointer, "\tcmp rsi, rdi\t\t\t\t; |\n");
-            fprintf(fpointer, "\tjne putlabel%d\t\t\t\t; |\n", putc_calls_count++);
+            fprintf(fpointer, "\tjne calcnumber%d\t\t\t\t; |\n", putc_calls_count++);
+            fprintf(fpointer, "\tmov rdx, 0\t\t\t\t; |\n");
+            fprintf(fpointer, "\tdiv rbx\t\t\t\t; |\n");
             fprintf(fpointer, "\tpushq rax\t\t\t\t; |\n");
             break;
         case op_inttostr:
@@ -672,6 +673,17 @@ void printAsmProgram(FILE* fpointer, astNode* node, char* stringVariables[], boo
             fprintf(fpointer, "\tcmp rcx, 0\t\t\t\t; |\n");
             fprintf(fpointer, "\tjg putlabel%d\t\t\t\t; |\n", putc_calls_count++);
             fprintf(fpointer, "\tpushq emptynumber%d\t\t\t\t; |\n", empty_number_count++);
+            break;
+        case op_argc:
+            fprintf(fpointer, "\tpushq [rbp]\t\t\t\t; argc\n");
+            break;
+        case op_argv:
+            fprintf(fpointer, "\tpopq rax\t\t\t\t; argv\n");
+            fprintf(fpointer, "\tmov rbx, rbp\t\t\t\t; |\n");
+            fprintf(fpointer, "\tadd rbx, 8\t\t\t\t; |\n");
+            fprintf(fpointer, "\timul rax, rax, 8\t\t\t\t; |\n");
+            fprintf(fpointer, "\tadd rax, rbx\t\t\t\t; |\n");
+            fprintf(fpointer, "\tpushq [rax]\t\t\t\t; |\n");
             break;
         case op_testingop:
             break;
@@ -712,6 +724,7 @@ int main(int argc, char const *argv[]) {
     char* treeOutFilename;
     char* assemblyOutFilename;
     char* codeInFilename = NULL;
+    char* binaryFlieName = NULL;
 
     if (argc < 2){
         printf("not enough arguments. use -h flag for help\n");
@@ -757,7 +770,11 @@ int main(int argc, char const *argv[]) {
                     break;
             }
         } else {
-            codeInFilename = (char*)argv[i];
+            if (codeInFilename){
+                binaryFlieName = (char*)argv[i];
+            } else {
+                codeInFilename = (char*)argv[i];
+            }
         }
     }
 
@@ -769,6 +786,9 @@ int main(int argc, char const *argv[]) {
     if (!codeInFilename){
         printf("input file missing. use -h flag for help\n");
         return 1;
+    }
+    if (!binaryFlieName){
+        binaryFlieName = "out.elf";
     }
 
     lex(codeInFilename, tokenised);
@@ -804,10 +824,12 @@ int main(int argc, char const *argv[]) {
     strcpy(command, "fasm ");
     strcat(command, assemblyOutFilename);
     strcat(command, " ");
-    strcat(command, "out.elf");
+    strcat(command, binaryFlieName);
     system(command);
 
-    system("chmod +x out.elf");
+    strcpy(command, "chmod +x ");
+    strcat(command, binaryFlieName);
+    system(command);
 
     if (!flags.assembly){
         strcpy(command, "rm ");
