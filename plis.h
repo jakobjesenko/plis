@@ -14,6 +14,7 @@
 #define MAX_WORD_LENGTH 32
 #define MAX_ARGUMENT_COUNT 6
 #define MAX_STRING_COUNT 128
+#define MAX_LINES_OF_CODE 256
 
 // program constants
 #define WRITE_BUFFER_LENGTH 128
@@ -134,5 +135,6 @@ static int string_variable_count = 0;
 static int empty_number_count = 0;
 static int global_statement_depth = 0;
 static int global_loop_depth = 0;
+static int global_program_counter = 0;
 
 #endif

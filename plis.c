@@ -1,7 +1,7 @@
 #include "plis.h"
 
 
-void lex(char* codeFileName, token tokenised[]){
+int lex(char* codeFileName, token tokenised[]){
     FILE* f = fopen(codeFileName, "r");
     char c;
     int col = 1;
@@ -82,6 +82,7 @@ void lex(char* codeFileName, token tokenised[]){
     }
     assert(!bracketSP && "not all brackets were closed");
     fclose(f);
+    return programCounter;
 }
 
 void printTokenisedProgram(FILE* fpointer, token tokenised[]){
@@ -118,6 +119,7 @@ void insertASTNode(token tokenised[], int programCounter, astNode* branch){
 
     token t = tokenised[programCounter];
     if (t.opnum == op_argend){
+        global_program_counter = programCounter + 1;
         return;
     }
 
@@ -240,6 +242,7 @@ void insertASTNode(token tokenised[], int programCounter, astNode* branch){
         programCounter++; // first argument
         token param = tokenised[programCounter];
         if (param.opnum == op_argend){
+            global_program_counter = programCounter + 1;
             return;
         }
         astNode* node = (astNode*)calloc(1, sizeof(astNode));
@@ -253,6 +256,7 @@ void insertASTNode(token tokenised[], int programCounter, astNode* branch){
         insertASTNode(tokenised, programCounter, branch->child[i]);
         programCounter = jumpPC(tokenised, programCounter); // PC points to a function
     }
+    global_program_counter = programCounter + 1;
 }
 
 void printAST(FILE* fpointer, astNode* node, int depth){
@@ -791,18 +795,25 @@ int main(int argc, char const *argv[]) {
         binaryFlieName = "out.elf";
     }
 
-    lex(codeInFilename, tokenised);
+    int tokenCount = lex(codeInFilename, tokenised);
     if (flags.tokens){
         FILE* tokenOutFile = fopen(tokenOutFilename, "w");
         printTokenisedProgram(tokenOutFile, tokenised);
         fclose(tokenOutFile);
     }
 
-    astNode* ast = (astNode*)calloc(1, sizeof(astNode));
-    insertASTNode(tokenised, 0, ast);
+    int usedLinesOfCode = 0;
+    astNode* linesOfCode[MAX_LINES_OF_CODE];
+    for (int i = 0; global_program_counter < tokenCount && i < MAX_LINES_OF_CODE; i++){
+        linesOfCode[i] = (astNode*)calloc(1, sizeof(astNode));
+        insertASTNode(tokenised, global_program_counter, linesOfCode[i]);
+        usedLinesOfCode = i + 1;
+    }
     if (flags.tree){
         FILE* treeOutFile = fopen(treeOutFilename, "w");
-        printAST(treeOutFile, ast, 0);
+        for (int i = 0; i < usedLinesOfCode; i++){
+            printAST(treeOutFile, linesOfCode[i], 0);
+        }
         fclose(treeOutFile);
     }
 
@@ -812,7 +823,9 @@ int main(int argc, char const *argv[]) {
     }
     FILE* assemblyOutFile = fopen(assemblyOutFilename, "w");
     printAsmHead(assemblyOutFile);
-    printAsmProgram(assemblyOutFile, ast, stringVariables, false, false, 0, 0, 0);
+    for (int i = 0; i < usedLinesOfCode; i++){
+        printAsmProgram(assemblyOutFile, linesOfCode[i], stringVariables, false, false, 0, 0, 0);
+    }
     printAsmExit(assemblyOutFile);
     printAsmFooter(assemblyOutFile, stringVariables);
     fclose(assemblyOutFile);
