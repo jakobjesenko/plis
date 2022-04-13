@@ -1,5 +1,15 @@
 # Changelog
 
+## Beta 1.2 ()
+
+procedures
+
+### New Operations:
+| operation                | usage                              | description   |
+| :----------------------: | :--------------------------------- | :------------ |
+| `proc(name)`             | proc(keyword:name) -> any          | execute prosedure with name name |
+| `procdef(name, code)`    | procdef(keyword:name, any:code) -> none | define procedure with name name |
+
 ## Beta 1.1 (2022-4-6)
 
 Now you can name output binary, when compiling.  

@@ -1,5 +1,3 @@
-nop()
-chain(
-    prints("hello"),
-    putc(10)
-)
+proc(koda)
+exit(0)
+procdef(koda, nop())

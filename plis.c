@@ -232,6 +232,8 @@ void insertASTNode(token tokenised[], int programCounter, astNode* branch){
             case op_argv:
                 assert(i < 2 && "argv only takes 1 argument");
                 break;
+            case op_proc:
+            case op_procdef:
             case op_testingop:
                 break;
             default:
@@ -325,7 +327,8 @@ char parseChar(char* str){
 }
 
 void printAsmProgram(FILE* fpointer, astNode* node, char* stringVariables[], bool weare_in_ifstatement,
-                        bool weare_in_whileloop, int argindex, int statement_depth, int loop_depth){
+                        bool weare_in_whileloop, int argindex, int statement_depth, int loop_depth,
+                        bool proc_calling, bool proc_defining){
     if (weare_in_ifstatement){
         if (argindex == 1){
             fprintf(fpointer, "; if block start\n");
@@ -341,15 +344,23 @@ void printAsmProgram(FILE* fpointer, astNode* node, char* stringVariables[], boo
     if (node->opnum == not_op){
         if (isNumber(node->info)){
             fprintf(fpointer, "\tpushq %s\t\t\t\t; params push\n", node->info);
-        } else if (node[0].info[0] == '\''){
+        } else if (node->info[0] == '\''){
             if (node->info[1] == '\\' && strlen(node->info) == 4) {
                 fprintf(fpointer, "\tpushq %d\t\t\t\t; params push\n", (int)parseChar(node->info));
             } else {
                 fprintf(fpointer, "\tpushq %d\t\t\t\t; params push\n", (int)node->info[1]);
             }
-        } else {
+        } else if (node->info[0] == '\"'){
             fprintf(fpointer, "\tpushq stringvar%d\t\t\t\t; string var def\n", string_variable_count);
             stringVariables[string_variable_count++] = node->info;
+        } else if (proc_calling){
+            fprintf(fpointer, "\tcall %s\t\t\t\t; proc\n", node->info);
+        } else if (proc_defining){
+            fprintf(fpointer, "%s:\t\t\t\t; procdef\n", node->info);
+        }
+        else {
+            assert(0 && "unknown keyword" && node->info);
+            fprintf(fpointer, ";notknownword: %s\n", node->info);
         }
         return;
     }
@@ -371,11 +382,16 @@ void printAsmProgram(FILE* fpointer, astNode* node, char* stringVariables[], boo
         weare_in_whileloop = false;
     }
 
+    proc_calling = node->opnum == op_proc;
+    proc_defining = node->opnum == op_procdef;
+
     for (int i = 0; i < MAX_ARGUMENT_COUNT; i++){
         if (!node->child[i]){
             break;
         }
-        printAsmProgram(fpointer, node->child[i], stringVariables, weare_in_ifstatement, weare_in_whileloop, i, statement_depth, loop_depth);
+        printAsmProgram(fpointer, node->child[i], stringVariables, weare_in_ifstatement,
+            weare_in_whileloop, i, statement_depth, loop_depth,
+            proc_calling, proc_defining);
 
         if (weare_in_ifstatement && i == 0){
             fprintf(fpointer, "\tpopq rax\t\t\t\t; if jump\n"); // if ends here
@@ -687,6 +703,12 @@ void printAsmProgram(FILE* fpointer, astNode* node, char* stringVariables[], boo
             fprintf(fpointer, "\tadd rax, rbx\t\t\t\t; |\n");
             fprintf(fpointer, "\tpushq [rax]\t\t\t\t; |\n");
             break;
+        case op_proc:
+            // see op_notop above
+            break;
+        case op_procdef:
+            fprintf(fpointer, "\tret\t\t\t\t; procdef end\n");
+            break;
         case op_testingop:
             break;
         default:
@@ -822,7 +844,7 @@ int main(int argc, char const *argv[]) {
     FILE* assemblyOutFile = fopen(assemblyOutFilename, "w");
     printAsmHead(assemblyOutFile);
     for (int i = 0; i < usedLinesOfCode; i++){
-        printAsmProgram(assemblyOutFile, linesOfCode[i], stringVariables, false, false, 0, 0, 0);
+        printAsmProgram(assemblyOutFile, linesOfCode[i], stringVariables, false, false, 0, 0, 0, false, false);
     }
     printAsmExit(assemblyOutFile);
     printAsmFooter(assemblyOutFile, stringVariables);
