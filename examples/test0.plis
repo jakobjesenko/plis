@@ -1,3 +1,6 @@
-proc(koda)
+prints(inttostr(proc(1, 2, 3, test1)))
+putc(10)
 exit(0)
-procdef(koda, nop())
+procdef(test1,
+    return(arg(0))
+)

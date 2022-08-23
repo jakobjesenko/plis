@@ -1,0 +1,14 @@
+prints(inttostr(proc(3, fac)))
+putc(10)
+exit(0)
+procdef(fac,
+    if(<=(arg(0), 1),
+        return(1),
+        return(
+            mul(
+                arg(0),
+                proc(sub(arg(0), 1), fac)
+            )
+        )
+    )
+)

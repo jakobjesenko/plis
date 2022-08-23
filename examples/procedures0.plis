@@ -1,0 +1,9 @@
+prints("Output of foo is: ")
+prints(inttostr(proc(33, foo)))
+putc('\n')
+
+exit(0)
+
+procdef(foo,
+    return(arg(0))
+)

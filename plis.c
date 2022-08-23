@@ -234,6 +234,8 @@ void insertASTNode(token tokenised[], int programCounter, astNode* branch){
                 break;
             case op_proc:
             case op_procdef:
+            case op_return:
+            case op_arg:
             case op_testingop:
                 break;
             default:
@@ -354,7 +356,7 @@ void printAsmProgram(FILE* fpointer, astNode* node, char* stringVariables[], boo
             fprintf(fpointer, "\tpushq stringvar%d\t\t\t\t; string var def\n", string_variable_count);
             stringVariables[string_variable_count++] = node->info;
         } else if (proc_calling){
-            fprintf(fpointer, "\tcall %s\t\t\t\t; proc\n", node->info);
+            fprintf(fpointer, "\tcall %s\t\t\t\t; proc name\n", node->info);
         } else if (proc_defining){
             fprintf(fpointer, "%s:\t\t\t\t; procdef\n", node->info);
         }
@@ -380,6 +382,15 @@ void printAsmProgram(FILE* fpointer, astNode* node, char* stringVariables[], boo
         fprintf(fpointer, "whilelooplabel%d:\t\t\t\t; while condition\n", loop_depth);
     } else {
         weare_in_whileloop = false;
+    }
+    if (node->opnum == op_proc){
+        fprintf(fpointer, "\tpushq r12\t\t\t\t; proc prep\n");
+        fprintf(fpointer, "\tpushq r13\t\t\t\t; |\n");
+        fprintf(fpointer, "\tsub rsp, 8\t\t\t\t; |\n"); // return value
+        fprintf(fpointer, "\tmov r12, rsp\t\t\t\t; |\n");
+        fprintf(fpointer, "\tmov r13, rsp\t\t\t\t; |\n");
+        fprintf(fpointer, "\tsub r13, 8\t\t\t\t; |\n"); // arguments
+        // argument space is allocated by pushing parameters (sub rsp, 8; is not needed)
     }
 
     proc_calling = node->opnum == op_proc;
@@ -704,10 +715,23 @@ void printAsmProgram(FILE* fpointer, astNode* node, char* stringVariables[], boo
             fprintf(fpointer, "\tpushq [rax]\t\t\t\t; |\n");
             break;
         case op_proc:
-            // see op_notop above
+            fprintf(fpointer, "\tadd rsp, 8\t\t\t\t; proc end\n");
+            fprintf(fpointer, "\tpopq rax\t\t\t\t; |\n"); // can be shortened, TODO later, not that important
+            fprintf(fpointer, "\tpopq r13\t\t\t\t; |\n");
+            fprintf(fpointer, "\tpopq r12\t\t\t\t; |\n");
+            fprintf(fpointer, "\tpushq rax\t\t\t\t; |\n");
             break;
         case op_procdef:
-            fprintf(fpointer, "\tret\t\t\t\t; procdef end\n");
+            fprintf(fpointer, "\t\t\t\t\t; default\n");
+        case op_return:
+            fprintf(fpointer, "\tpopq rax\t\t\t\t; return\n");
+            fprintf(fpointer, "\tmov [r12], rax\t\t\t\t; |\n");
+            fprintf(fpointer, "\tret\t\t\t\t; |\n");
+            break;
+        case op_arg:
+            fprintf(fpointer, "\tpopq rax\t\t\t\t; arg\n");
+            fprintf(fpointer, "\tneg rax\t\t\t\t; |\n");
+            fprintf(fpointer, "\tpushq [r14 + 8*rax]\t\t\t\t; |\n");
             break;
         case op_testingop:
             break;
