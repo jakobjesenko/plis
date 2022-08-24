@@ -1,4 +1,4 @@
-prints(inttostr(proc(3, fac)))
+prints(inttostr(proc(5, fac)))
 putc(10)
 exit(0)
 procdef(fac,
@@ -6,8 +6,8 @@ procdef(fac,
         return(1),
         return(
             mul(
-                arg(0),
-                proc(sub(arg(0), 1), fac)
+                proc(sub(arg(0), 1), fac),
+                arg(0)
             )
         )
     )

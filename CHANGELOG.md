@@ -2,13 +2,14 @@
 
 ## Beta 1.2 ()
 
-procedures
+procedures  
+Only works for 1 argument and no recursion. It is sad...
 
 ### New Operations:
-| operation                | usage                              | description   |
-| :----------------------: | :--------------------------------- | :------------ |
-| `proc(name)`             | proc(keyword:name) -> any          | execute prosedure with name name |
-| `procdef(name, code)`    | procdef(keyword:name, any:code) -> none | define procedure with name name |
+| operation                     | usage                              | description   |
+| :---------------------------: | :--------------------------------- | :------------ |
+| `proc(arg, name)`             | proc(any:arg, keyword:name) -> any          | execute procedure with name name |
+| `procdef(name, code)`         | procdef(keyword:name, any:code) -> none | define procedure with name name |
 
 ## Beta 1.1 (2022-4-6)
 

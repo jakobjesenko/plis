@@ -731,7 +731,7 @@ void printAsmProgram(FILE* fpointer, astNode* node, char* stringVariables[], boo
         case op_arg:
             fprintf(fpointer, "\tpopq rax\t\t\t\t; arg\n");
             fprintf(fpointer, "\tneg rax\t\t\t\t; |\n");
-            fprintf(fpointer, "\tpushq [r14 + 8*rax]\t\t\t\t; |\n");
+            fprintf(fpointer, "\tpushq [r13 + 8*rax]\t\t\t\t; |\n");
             break;
         case op_testingop:
             break;
@@ -743,9 +743,10 @@ void printAsmProgram(FILE* fpointer, astNode* node, char* stringVariables[], boo
 }
 
 void printAsmExit(FILE* fpointer){
-    fprintf(fpointer, "\tmov rax, 60\n");
-    fprintf(fpointer, "\tmov rdi, 0\n");
-    fprintf(fpointer, "\tsyscall\n");
+    fprintf(fpointer, "\t\t\t\t\t; default\n");
+    fprintf(fpointer, "\tmov rax, 60\t\t\t\t; exit\n");
+    fprintf(fpointer, "\tmov rdi, 0\t\t\t\t; |\n");
+    fprintf(fpointer, "\tsyscall\t\t\t\t; |\n");
 }
 
 void printAsmFooter(FILE* fpointer, char* stringVariables[]){
